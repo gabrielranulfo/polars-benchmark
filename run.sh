@@ -3,8 +3,8 @@ export SCALE_FACTOR=1.0
 
 echo run with cached IO
 #make tables
-make  run-polars run-pyspark
-#make  run-polars run-dask run-pandas run-modin run-duckdb
+make  run-dask
+#make  run-polars run-dask run-pandas run-modin run-duckdb run-pyspark
 #make plot
 
 #echo run with IO
