@@ -37,4 +37,4 @@ qgen
 .env*
 
 .tmp/
-./github*
+.github*
