@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from .monitor_de_memoria import MemoryMonitor
+
 import re
 import sys
 from importlib.metadata import version
 from pathlib import Path
-from subprocess import run
+from subprocess import run, Popen
 from typing import TYPE_CHECKING, Any
 
 from linetimer import CodeTimer
@@ -80,9 +82,28 @@ def execute_all(library_name: str) -> None:
 
     query_numbers = _get_query_numbers(library_name)
 
+    #ajustar o intervalo quando a biblioteca for muito rapida como o caso da polars, pois só assim da para notar a memoria oscilando, em 100 é muito bom mas gera
+    #muita mensagem
+    memoria_monitor = MemoryMonitor(interval_us=1_000_000,log_file="output/run/memory_monitor.csv")
+
     with CodeTimer(name=f"Overall execution of ALL {library_name} queries", unit="s"):
-        for i in query_numbers:
-            run([sys.executable, "-m", f"queries.{library_name}.q{i}"])
+
+        for query_number in query_numbers:
+            # Executa a query e captura o PID do processo
+            process = Popen([sys.executable, "-m", f"queries.{library_name}.q{query_number}"])
+
+            # Configura o PID e detalhes da query no monitor
+            memoria_monitor.set_pid(process.pid)
+            memoria_monitor.set_query_details(query_number=query_number, library_name=library_name)
+
+            # Inicia o monitoramento de memória
+            memoria_monitor.start_monitoring()
+
+            # Aguarda o término do processo
+            process.wait()
+
+            # Para o monitoramento de memória
+            memoria_monitor.stop_monitoring()
 
 
 def _get_query_numbers(library_name: str) -> list[int]:

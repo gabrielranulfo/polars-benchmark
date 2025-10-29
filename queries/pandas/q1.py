@@ -1,17 +1,12 @@
 from __future__ import annotations
-
 from datetime import date
-
 import pandas as pd
-
 from queries.pandas import utils
 
 Q_NUM = 1
 
-
 def q() -> None:
     line_item_ds = utils.get_line_item_ds
-    # first call one time to cache in case we don't include the IO times
     line_item_ds()
 
     def query() -> pd.DataFrame:
@@ -21,10 +16,6 @@ def q() -> None:
         var1 = date(1998, 9, 2)
 
         filt = line_item_ds[line_item_ds["l_shipdate"] <= var1]
-
-        # This is lenient towards pandas as normally an optimizer should decide
-        # that this could be computed before the groupby aggregation.
-        # Other implementations don't enjoy this benefit.
         filt["disc_price"] = filt.l_extendedprice * (1.0 - filt.l_discount)
         filt["charge"] = (
             filt.l_extendedprice * (1.0 - filt.l_discount) * (1.0 + filt.l_tax)
@@ -44,8 +35,7 @@ def q() -> None:
 
         result_df = agg.sort_values(["l_returnflag", "l_linestatus"])
 
-        return result_df  # type: ignore[no-any-return]
-
+        return result_df  
     utils.run_query(Q_NUM, query)
 
 
