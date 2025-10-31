@@ -1,9 +1,9 @@
 export RUN_LOG_TIMINGS=1
 export SCALE_FACTOR=1.0
 
-echo run with cached IO
+#echo run with cached IO
 #make tables
-make  run-dask
+make  run-pyspark
 #make  run-polars run-dask run-pandas run-modin run-duckdb run-pyspark
 #make plot
 

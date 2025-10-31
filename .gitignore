@@ -38,3 +38,5 @@ qgen
 
 .tmp/
 .github*
+
+*__pycache__/

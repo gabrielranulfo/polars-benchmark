@@ -16,16 +16,31 @@ if TYPE_CHECKING:
 
 settings = Settings()
 
-
 def get_or_create_spark() -> SparkSession:
+    import os
+    
+    # Configurações agressivas para evitar problemas de segurança
+    os.environ['SPARK_LOCAL_IP'] = '127.0.0.1'
+    os.environ['SPARK_SUBMIT_OPTS'] = '-Djava.security.manager=allow'
+    os.environ['_JAVA_OPTIONS'] = '-Djava.security.manager=allow'
+    
     spark = (
         SparkSession.builder.appName("spark_queries")
         .master("local[*]")
         .config("spark.driver.memory", settings.run.spark_driver_memory)
         .config("spark.executor.memory", settings.run.spark_executor_memory)
         .config("spark.log.level", settings.run.spark_log_level)
+        # Configurações para desabilitar segurança
+        .config("spark.driver.extraJavaOptions", "-Djava.security.manager=allow -Djava.security.policy==")
+        .config("spark.executor.extraJavaOptions", "-Djava.security.manager=allow -Djava.security.policy==")
+        .config("spark.hadoop.security.authentication", "simple")
+        .config("spark.sql.adaptive.enabled", "true")
+        .config("spark.sql.legacy.timeParserPolicy", "LEGACY")
         .getOrCreate()
     )
+    
+    # Reduzir logging
+    spark.sparkContext.setLogLevel("ERROR")
     return spark
 
 
