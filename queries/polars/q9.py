@@ -1,0 +1,47 @@
+import polars as pl
+
+from queries.polars import utils
+
+Q_NUM = 9
+
+
+def q() -> None:
+    part = utils.get_part_ds()
+    supplier = utils.get_supplier_ds()
+    lineitem = utils.get_line_item_ds()
+    partsupp = utils.get_part_supp_ds()
+    orders = utils.get_orders_ds()
+    nation = utils.get_nation_ds()
+
+    var1 = "green"
+
+    q_final = (
+        lineitem.join(part, left_on="l_partkey", right_on="p_partkey")
+        .join(partsupp, left_on=["l_suppkey", "l_partkey"], right_on=["ps_suppkey", "ps_partkey"])
+        .join(supplier, left_on="l_suppkey", right_on="s_suppkey")
+        .join(orders, left_on="l_orderkey", right_on="o_orderkey")
+        .join(nation, left_on="s_nationkey", right_on="n_nationkey")
+        .filter(pl.col("p_name").str.contains(var1))
+        .with_columns(
+            pl.col("o_orderdate").dt.year().alias("o_year"),
+            (
+                pl.col("l_extendedprice") * (1 - pl.col("l_discount"))
+                - pl.col("ps_supplycost") * pl.col("l_quantity")
+            ).alias("amount"),
+        )
+        .group_by("n_name", "o_year")
+        .agg(pl.sum("amount").alias("sum_profit"))
+        .select(
+            pl.col("n_name").alias("nation"),
+            "o_year",
+            "sum_profit",
+        )
+        .sort(by=["nation", "o_year"], descending=[False, True])
+    )
+
+    utils.run_query(Q_NUM, q_final)
+
+
+if __name__ == "__main__":
+    q()
+
