@@ -11,8 +11,7 @@
 set -e
 
 git checkout mestrado
+#docker build --no-cache -t polars-benchmark .
 docker compose build 
 
 docker compose up -d 
-
-docker build --no-cache -t polars-benchmark .
