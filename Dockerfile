@@ -33,9 +33,9 @@ RUN git checkout mestrado
 
 # Ambiente virtual + dependências
 RUN python3.11 -m venv .venv && \
-    ./.venv/bin/pip install --upgrade pip polars && \
+    ./.venv/bin/pip install --upgrade pip && \
     ./.venv/bin/pip install -r requirements.in && \
-    ./.venv/bin/pip install -r requirements-polars-only.txt && \
+    #./.venv/bin/pip install -r requirements-polars-only.txt && \
     chmod +x *.sh
 
 # Executa script inicial

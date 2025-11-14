@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=dissertacao_tpch
-#SBATCH --partition=cei
+#SBATCH --partition=draco
 #SBATCH --nodes=1
 #SBATCH --ntasks=8
 #SBATCH --cpus-per-task=4
@@ -9,8 +9,8 @@
 #SBATCH --error=%x_%j.err
 
 set -e
+
 git checkout mestrado
-docker compose down --rmi all --volumes --remove-orphans
-docker system prune -a -f --volumes
-docker compose build --no-cache --pull
-docker compose up -d --force-recreate
+docker compose build 
+
+docker compose up -d 
