@@ -33,7 +33,7 @@ qgen
 
 # Project
 /data/tables/
-/output/
+#/output/
 .env*
 
 .tmp/
