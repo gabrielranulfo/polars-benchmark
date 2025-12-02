@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from importlib.metadata import version
 from typing import TYPE_CHECKING
 
 from pyspark.sql import SparkSession
@@ -97,7 +98,11 @@ def get_part_supp_ds() -> DataFrame:
 
 
 def run_query(query_number: int, df: DataFrame) -> None:
-    query = df.toPandas
+    query = lambda: df.toPandas()
     run_query_generic(
-        query, query_number, "pyspark", query_checker=check_query_result_pd
+        query,
+        query_number,
+        "pyspark",
+        library_version=version("pyspark"),
+        query_checker=check_query_result_pd,
     )
