@@ -1,14 +1,22 @@
 export RUN_LOG_TIMINGS=1
 export SCALE_FACTOR=1.0
 
-#echo run with cached IO
-make tables
-#make  run-modin
-make  run-pandas run-polars run-dask run-pyspark
-#make  run-polars run-dask run-pandas run-modin run-duckdb run-pyspark
-#make plot
+export N_CORES=2
 
-#echo run with IO
-#export RUN_INCLUDE_IO=1
-#make run-all
+export POLARS_MAX_THREADS=$N_CORES
+export SPARK_CORES=$N_CORES
+export DASK_WORKER_CONCURRENCY=$N_CORES
+export MODIN_CPUS=$N_CORES
+
+#export MODIN_MEMORY=8g
+#export MODIN_BLOCK_SIZE=128m
+#export MODIN_MEMORY_PER_NODE=8g
+#export MODIN_MEMORY_PER_NODE=8g
+
+#echo run with cached IO
+
+make tables SCALE_FACTOR=$SCALE_FACTOR
+
+make  run-modin run-pandas run-polars run-dask run-pyspark
+
 #make plot
