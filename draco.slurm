@@ -8,10 +8,25 @@
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.err
 
-set -e
+export RUN_LOG_TIMINGS=1
+export SCALE_FACTOR=1.0
 
-git checkout mestrado
-#docker build --no-cache -t polars-benchmark .
-docker compose build 
+export N_CORES=2
 
-docker compose up
+export POLARS_MAX_THREADS=$N_CORES
+export SPARK_CORES=$N_CORES
+export DASK_WORKER_CONCURRENCY=$N_CORES
+export MODIN_CPUS=$N_CORES
+
+#export MODIN_MEMORY=8g
+#export MODIN_BLOCK_SIZE=128m
+#export MODIN_MEMORY_PER_NODE=8g
+#export MODIN_MEMORY_PER_NODE=8g
+
+#echo run with cached IO
+
+make tables SCALE_FACTOR=$SCALE_FACTOR
+
+make  run-modin run-pandas run-polars run-dask run-pyspark
+
+#make plot
