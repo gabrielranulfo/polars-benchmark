@@ -16,7 +16,6 @@ export MODIN_CPUS=$N_CORES
 #echo run with cached IO
 
 make tables SCALE_FACTOR=$SCALE_FACTOR
-
 make  run-modin run-pandas run-polars run-dask run-pyspark
 
 #make plot
