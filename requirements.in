@@ -9,3 +9,4 @@ plotnine
 plotly
 pydantic
 pydantic-settings
+psutil
