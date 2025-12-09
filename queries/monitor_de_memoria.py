@@ -1,4 +1,4 @@
-'''import psutil
+import psutil
 import time
 import threading
 import csv
@@ -131,4 +131,3 @@ class MemoryMonitor:
         if self.running:
             self.running = False
             self.thread.join()
-'''
