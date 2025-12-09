@@ -1,0 +1,47 @@
+# Base: Ubuntu 22.04 (necessário para Python 3.11)
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Adicionar repositório Deadsnakes
+RUN apt-get update && apt-get install -y software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
+    && apt-get update
+
+# Instalar Python 3.11 + dependências
+RUN apt-get install -y --no-install-recommends \
+    python3.11 \
+    python3.11-dev \
+    python3.11-venv \
+    python3-pip \
+    build-essential \
+    git \
+    curl \
+    wget \
+    vim \
+    ca-certificates \
+    libssl-dev \
+    libffi-dev \
+    libsqlite3-dev \
+    libbz2-dev \
+    liblzma-dev \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Garantir que python aponta para python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+
+ENV SCALE_FACTOR=1.0
+
+# Clonar repositório
+RUN cd /root && \
+    git clone https://github.com/gabrielranulfo/polars-benchmark.git && \
+    cd polars-benchmark && \
+    git checkout mestrado && \
+    pip install -r requirements.in && \
+    chmod +x run.sh
+
+WORKDIR /root/polars-benchmark
+
+CMD ["/bin/bash"]

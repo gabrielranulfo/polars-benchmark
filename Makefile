@@ -7,7 +7,7 @@ VENV_BIN=$(VENV)/bin
 
 .venv:  ## Set up Python virtual environment and install dependencies
 	python3 -m venv $(VENV)
-	#$(MAKE) install-deps
+	$(MAKE) install-deps
 
 .PHONY: install-deps
 install-deps: .venv  ## Install Python project dependencies
