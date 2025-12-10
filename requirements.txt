@@ -56,7 +56,6 @@ platformdirs==4.2.0
 plotly==5.21.0
 plotnine==0.13.4
 #polars==0.20.21
-polars-lts-cpu
 prometheus-client==0.20.0
 protobuf==5.26.1
 psutil==5.9.8
