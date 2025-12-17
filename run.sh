@@ -1,5 +1,5 @@
 export RUN_LOG_TIMINGS=1
-export SCALE_FACTOR=1.0
+#export SCALE_FACTOR=1.0
 
 export N_CORES=2
 
