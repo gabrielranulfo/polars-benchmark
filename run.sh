@@ -15,9 +15,9 @@ export MODIN_CPUS=$N_CORES
 
 #echo run with cached IO
 
-export pasta=$PWD
+#export pasta=$PWD
 
-rm -rfv $pasta/output/*
+#rm -rfv $pasta/output/*
 
 make tables SCALE_FACTOR=$SCALE_FACTOR
 
