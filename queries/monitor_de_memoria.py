@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 class MemoryMonitor:
-    def __init__(self, interval_us=1_000_000, log_file="memory_monitor.csv"):
+    def __init__(self, interval_us=1, log_file="memory_monitor.csv"):
         """
         Inicializa o monitor de memória.
 

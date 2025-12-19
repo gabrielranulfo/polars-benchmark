@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from .monitor_de_memoria import MemoryMonitor
+from .monitor_de_cpu import CpuMonitor  
 
 import re
 import sys
+import os
 from importlib.metadata import version
 from pathlib import Path
 from subprocess import run, Popen
@@ -32,10 +34,13 @@ def log_query_timing(
     solution: str, version: str, query_number: int, time: float
 ) -> None:
     settings.paths.timings.mkdir(parents=True, exist_ok=True)
+    # include PID so we can correlate timings with monitoring logs
+    pid = os.getpid()
 
     with (settings.paths.timings / settings.paths.timings_filename).open("a") as f:
+        # add header including pid if file is empty
         if f.tell() == 0:
-            f.write("solution,version,query_number,duration[s],io_type,scale_factor\n")
+            f.write("solution,version,query_number,duration[s],io_type,scale_factor,pid\n")
 
         line = (
             ",".join(
@@ -46,6 +51,7 @@ def log_query_timing(
                     str(time),
                     settings.run.io_type,
                     str(settings.scale_factor),
+                    str(pid),
                 ]
             )
             + "\n"
@@ -76,35 +82,36 @@ def on_second_call(func: Any) -> Any:
 
     return helper
 
-
 def execute_all(library_name: str) -> None:
     print(settings.model_dump_json())
 
     query_numbers = _get_query_numbers(library_name)
 
-    #ajustar o intervalo quando a biblioteca for muito rapida como o caso da polars, pois só assim da para notar a memoria oscilando, em 100 é muito bom mas gera
-    #muita mensagem
-    # memoria_monitor = MemoryMonitor(interval_us=1_000_000,log_file="output/run/memory_monitor.csv")
+    memoria_monitor = MemoryMonitor(interval_us=500_000, log_file="output/run/memory_monitor.csv")
+
+    cpu_monitor = CpuMonitor(interval_us=500_000, log_file="output/run/cpu_monitor.csv")
 
     with CodeTimer(name=f"Overall execution of ALL {library_name} queries", unit="s"):
 
         for query_number in query_numbers:
-            # Executa a query e captura o PID do processo
+
             process = Popen([sys.executable, "-m", f"queries.{library_name}.q{query_number}"])
 
-            # Configura o PID e detalhes da query no monitor
-            # memoria_monitor.set_pid(process.pid)
-            # memoria_monitor.set_query_details(query_number=query_number, library_name=library_name)
+            current_pid = process.pid
+            
+            memoria_monitor.set_pid(current_pid)
+            memoria_monitor.set_query_details(query_number=query_number, library_name=library_name)
+            
+            cpu_monitor.set_pid(current_pid)  
+            cpu_monitor.set_query_details(query_number=query_number, library_name=library_name) 
 
-            # Inicia o monitoramento de memória
-            # memoria_monitor.start_monitoring()
+            memoria_monitor.start_monitoring()
+            cpu_monitor.start_monitoring()  
 
-            # Aguarda o término do processo
             process.wait()
 
-            # Para o monitoramento de memória
-            # memoria_monitor.stop_monitoring()
-
+            memoria_monitor.stop_monitoring()
+            cpu_monitor.stop_monitoring() 
 
 def _get_query_numbers(library_name: str) -> list[int]:
     """Get the query numbers that are implemented for the given library."""
@@ -119,7 +126,6 @@ def _get_query_numbers(library_name: str) -> list[int]:
             query_numbers.append(int(match.group(1)))
 
     return sorted(query_numbers)
-
 
 def run_query_generic(
     query: Callable[..., Any],
@@ -152,14 +158,12 @@ def run_query_generic(
     if settings.run.show_results:
         print(result)
 
-
 def check_query_result_pl(result: pl.DataFrame, query_number: int) -> None:
     """Assert that the Polars result of the query is correct."""
     from polars.testing import assert_frame_equal
 
     expected = _get_query_answer_pl(query_number)
     assert_frame_equal(result, expected, check_dtype=False)
-
 
 def check_query_result_pd(result: pd.DataFrame, query_number: int) -> None:
     """Assert that the pandas result of the query is correct."""
@@ -168,14 +172,12 @@ def check_query_result_pd(result: pd.DataFrame, query_number: int) -> None:
     expected = _get_query_answer_pd(query_number)
     assert_frame_equal(result.reset_index(drop=True), expected, check_dtype=False)
 
-
 def _get_query_answer_pl(query: int) -> pl.DataFrame:
     """Read the true answer to the query from disk as a Polars DataFrame."""
     from polars import read_parquet
 
     path = settings.paths.answers / f"q{query}.parquet"
     return read_parquet(path)
-
 
 def _get_query_answer_pd(query: int) -> pd.DataFrame:
     """Read the true answer to the query from disk as a pandas DataFrame."""
