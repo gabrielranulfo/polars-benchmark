@@ -3,7 +3,6 @@ dask-expr
 duckdb
 modin[ray]
 pandas>=2.0
-#polars
 polars-lts-cpu
 pyspark
 
