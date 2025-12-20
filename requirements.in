@@ -3,7 +3,8 @@ dask-expr
 duckdb
 modin[ray]
 pandas>=2.0
-polars
+#polars
+polars-lts-cpu
 pyspark
 
 pyarrow  # Required by duckdb/pandas
