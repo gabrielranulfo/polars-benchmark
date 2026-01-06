@@ -22,11 +22,19 @@ def _scan_ds(table_name: str) -> str:
         )
         return name
     elif settings.run.io_type == "parquet":
-        duckdb.read_parquet(path_str)
-        return f"'{path_str}'"
+        name = path_str.replace("/", "_").replace(".", "_").replace("-", "_")
+        # create a temp table from the parquet file so queries can reference a table name
+        duckdb.sql(
+            f"create temp table if not exists {name} as select * from read_parquet('{path_str}');"
+        )
+        return name
     elif settings.run.io_type == "csv":
-        duckdb.read_csv(path_str)
-        return f"'{path_str}'"
+        name = path_str.replace("/", "_").replace(".", "_").replace("-", "_")
+        # create a temp table from the csv file so queries can reference a table name
+        duckdb.sql(
+            f"create temp table if not exists {name} as select * from read_csv_auto('{path_str}');"
+        )
+        return name
     else:
         msg = f"unsupported file type: {settings.run.io_type!r}"
         raise ValueError(msg)
