@@ -21,8 +21,8 @@ export MODIN_CPUS=$N_CORES
 
 make tables SCALE_FACTOR=$SCALE_FACTOR
 
-#make run-all
+make run-all
 
-make run-duckdb
+#make run-duckdb
 
 #make plot
