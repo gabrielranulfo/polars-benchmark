@@ -1,7 +1,8 @@
 export RUN_LOG_TIMINGS=1
 #export SCALE_FACTOR=1.0
 
-export N_CORES=2
+# Define N_CORES com valor padrão de 2 caso não esteja definido
+export N_CORES=${N_CORES:-8}
 
 export POLARS_MAX_THREADS=$N_CORES
 export SPARK_CORES=$N_CORES
