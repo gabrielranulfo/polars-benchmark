@@ -64,7 +64,7 @@ run-modin: .venv  ## Run Modin benchmarks
 	$(VENV_BIN)/python -m queries.modin
 
 .PHONY: run-all
-run-all: run-polars run-duckdb run-pandas run-pyspark run-dask run-modin  ## Run all benchmarks
+run-all:  run-pandas   ## Run all benchmarks
 
 .PHONY: plot
 plot: .venv  ## Plot results
