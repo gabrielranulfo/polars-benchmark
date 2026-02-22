@@ -32,10 +32,10 @@ class Run(BaseSettings):
     polars_eager: bool = False
     polars_streaming: bool = False
 
-    modin_memory: int = 8_000_000_000  # Tune as needed for optimal performance
+    modin_memory: int = 60_000_000_000  # Tune as needed for optimal performance
 
-    spark_driver_memory: str = "2g"  # Tune as needed for optimal performance
-    spark_executor_memory: str = "1g"  # Tune as needed for optimal performance
+    spark_driver_memory: str = "4g"  # Tune as needed for optimal performance
+    spark_executor_memory: str = "55g"  # Tune as needed for optimal performance
     spark_log_level: str = "ERROR"
 
     @computed_field  # type: ignore[misc]
