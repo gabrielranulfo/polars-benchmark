@@ -98,7 +98,11 @@ def get_part_supp_ds() -> DataFrame:
 
 
 def run_query(query_number: int, df: DataFrame) -> None:
-    query = lambda: df.toPandas()
+    def query():
+        if settings.scale_factor == 1 and settings.run.check_results:
+            return df.toPandas()
+
+        return df.collect()
     run_query_generic(
         query,
         query_number,

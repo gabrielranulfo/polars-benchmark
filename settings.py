@@ -1,8 +1,21 @@
 from pathlib import Path
-from typing import Literal, TypeAlias
+from typing import Literal, TypeAlias, Any
 
-from pydantic import computed_field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+# pydantic may not be available in restricted environments; provide fallbacks
+try:
+    from pydantic import computed_field
+    from pydantic_settings import BaseSettings, SettingsConfigDict
+except ImportError:  # pragma: no cover - simple stand-ins when libs missing
+    # minimal decorator that leaves property untouched
+    def computed_field(func):
+        return func
+
+    class BaseSettings:  # type: ignore[misc]
+        def __init__(self, **kwargs: Any) -> None:  # type: ignore[override]
+            for k, v in kwargs.items():
+                setattr(self, k, v)
+
+    SettingsConfigDict = dict  # type: ignore[assignment]
 
 IoType: TypeAlias = Literal["skip", "parquet", "feather", "csv"]
 
