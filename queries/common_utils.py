@@ -33,11 +33,13 @@ def get_table_path(table_name: str) -> Path:
 def log_query_timing(
     solution: str, version: str, query_number: int, time: float
 ) -> None:
-    settings.paths.timings.mkdir(parents=True, exist_ok=True)
+    output_path = Path("output/run/timings.csv")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
     # include PID so we can correlate timings with monitoring logs
     pid = os.getpid()
 
-    with (settings.paths.timings / settings.paths.timings_filename).open("a") as f:
+    with output_path.open("a") as f:
         # add header including pid if file is empty
         if f.tell() == 0:
             f.write("solution,version,query_number,duration[s],io_type,scale_factor,pid\n")
@@ -57,7 +59,6 @@ def log_query_timing(
             + "\n"
         )
         f.write(line)
-
 
 def on_second_call(func: Any) -> Any:
     def helper(*args: Any, **kwargs: Any) -> Any:
