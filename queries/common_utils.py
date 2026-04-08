@@ -31,7 +31,7 @@ def get_table_path(table_name: str) -> Path:
 
 
 def log_query_timing(
-    solution: str, version: str, query_number: int, time: float
+    solution: str, version: str, query_number: int, time: float, status: str = "sucesso"
 ) -> None:
     output_path = Path("output/run/timings.csv")
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -40,9 +40,9 @@ def log_query_timing(
     pid = os.getpid()
 
     with output_path.open("a") as f:
-        # add header including pid if file is empty
+        # add header including pid and status if file is empty
         if f.tell() == 0:
-            f.write("solution,version,query_number,duration[s],io_type,scale_factor,pid\n")
+            f.write("solution,version,query_number,duration[s],io_type,scale_factor,pid,status\n")
 
         line = (
             ",".join(
@@ -54,6 +54,7 @@ def log_query_timing(
                     settings.run.io_type,
                     str(settings.scale_factor),
                     str(pid),
+                    status,
                 ]
             )
             + "\n"
@@ -136,18 +137,28 @@ def run_query_generic(
     query_checker: Callable[..., None] | None = None,
 ) -> None:
     """Execute a query."""
+    status = "sucesso"
+    result = None
     with CodeTimer(name=f"Run {library_name} query {query_number}", unit="s") as timer:
-        result = query()
+        try:
+            result = query()
+        except Exception as e:
+            status = f"erro: {type(e).__name__}"
+            raise
+        finally:
+            if settings.run.log_timings:
+                try:
+                    log_query_timing(
+                        solution=library_name,
+                        version=library_version or version(library_name),
+                        query_number=query_number,
+                        time=timer.took,
+                        status=status
+                    )
+                except Exception:
+                    pass
 
-    if settings.run.log_timings:
-        log_query_timing(
-            solution=library_name,
-            version=library_version or version(library_name),
-            query_number=query_number,
-            time=timer.took,
-        )
-
-    if settings.run.check_results:
+    if status == "sucesso" and settings.run.check_results:
         if query_checker is None:
             msg = "cannot check results if no query checking function is provided"
             raise ValueError(msg)
@@ -156,7 +167,7 @@ def run_query_generic(
             raise RuntimeError(msg)
         query_checker(result, query_number)
 
-    if settings.run.show_results:
+    if status == "sucesso" and settings.run.show_results:
         print(result)
 
 def check_query_result_pl(result: pl.DataFrame, query_number: int) -> None:
