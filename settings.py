@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Literal, TypeAlias, Any
+import os
 
 # pydantic may not be available in restricted environments; provide fallbacks
 try:
