@@ -47,8 +47,8 @@ class Run(BaseSettings):
 
     modin_memory: int = 60_000_000_000  # Tune as needed for optimal performance
 
-    spark_driver_memory: str = "4g"  # Tune as needed for optimal performance
-    spark_executor_memory: str = "55g"  # Tune as needed for optimal performance
+    spark_driver_memory: str = os.getenv("SPARK_DRIVER_MEMORY", "4g")
+    spark_executor_memory: str = os.getenv("SPARK_EXECUTOR_MEMORY", "55g")
     spark_log_level: str = "ERROR"
 
     @computed_field  # type: ignore[misc]
@@ -69,7 +69,6 @@ class Plot(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="plot_", env_file=".env", extra="ignore"
     )
-
 
 class Settings(BaseSettings):
     scale_factor: float = 1.0
