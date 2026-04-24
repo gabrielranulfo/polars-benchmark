@@ -1,55 +1,48 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pandas as pd
 
 from queries.pandas import utils
-
-if TYPE_CHECKING:
-    pass
+from settings import Settings
 
 Q_NUM = 11
 
+settings = Settings()
+
 
 def q() -> None:
-    part_supp_ds = utils.get_part_supp_ds
-    supplier_ds = utils.get_supplier_ds
-    nation_ds = utils.get_nation_ds
+    nation_ds_fn = utils.get_nation_ds
+    part_supp_ds_fn = utils.get_part_supp_ds
+    supplier_ds_fn = utils.get_supplier_ds
 
     # first call one time to cache in case we don't include the IO times
-    part_supp_ds()
-    supplier_ds()
-    nation_ds()
+    nation_ds_fn()
+    part_supp_ds_fn()
+    supplier_ds_fn()
 
     def query() -> pd.DataFrame:
-        nonlocal part_supp_ds
-        nonlocal supplier_ds
-        nonlocal nation_ds
-        part_supp_ds = part_supp_ds()
-        supplier_ds = supplier_ds()
-        nation_ds = nation_ds()
+        nation_ds = nation_ds_fn()
+        part_supp_ds = part_supp_ds_fn()
+        supplier_ds = supplier_ds_fn()
 
         var1 = "GERMANY"
-        var2 = 0.0001
+        var2 = 0.0001 / settings.scale_factor
 
-        jn1 = part_supp_ds.merge(supplier_ds, left_on="ps_suppkey", right_on="s_suppkey")
+        jn1 = part_supp_ds.merge(
+            supplier_ds, left_on="ps_suppkey", right_on="s_suppkey"
+        )
         jn2 = jn1.merge(nation_ds, left_on="s_nationkey", right_on="n_nationkey")
-        filt = jn2[jn2["n_name"] == var1]
+        jn2 = jn2[jn2["n_name"] == var1]
 
-        filt = filt.copy()
-        filt["value"] = filt["ps_supplycost"] * filt["ps_availqty"]
+        jn2["value"] = jn2["ps_supplycost"] * jn2["ps_availqty"]
 
-        # Calcula o threshold
-        total_value = filt["value"].sum()
-        threshold = total_value * var2
+        threshold = jn2["value"].sum() * var2
 
-        gb = filt.groupby("ps_partkey", as_index=False)
+        gb = jn2.groupby("ps_partkey", as_index=False)
         agg = gb.agg(value=pd.NamedAgg(column="value", aggfunc="sum"))
 
-        result_df = agg[agg["value"] > threshold].sort_values(
-            by="value", ascending=False
-        )
+        result = agg[agg["value"] > threshold]
+        result_df = result.sort_values("value", ascending=False)
 
         return result_df  # type: ignore[no-any-return]
 
@@ -58,5 +51,3 @@ def q() -> None:
 
 if __name__ == "__main__":
     q()
-
-

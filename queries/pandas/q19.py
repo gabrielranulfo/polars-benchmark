@@ -1,86 +1,67 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pandas as pd
 
 from queries.pandas import utils
-
-if TYPE_CHECKING:
-    pass
 
 Q_NUM = 19
 
 
 def q() -> None:
-    line_item_ds = utils.get_line_item_ds
-    part_ds = utils.get_part_ds
+    lineitem_ds_fn = utils.get_line_item_ds
+    part_ds_fn = utils.get_part_ds
 
     # first call one time to cache in case we don't include the IO times
-    line_item_ds()
-    part_ds()
+    lineitem_ds_fn()
+    part_ds_fn()
 
     def query() -> pd.DataFrame:
-        nonlocal line_item_ds
-        nonlocal part_ds
-        line_item_ds = line_item_ds()
-        part_ds = part_ds()
+        lineitem_ds = lineitem_ds_fn()
+        part_ds = part_ds_fn()
 
-        var1 = "Brand#12"
-        var4 = 1
-        var2 = "Brand#23"
-        var5 = 10
-        var3 = "Brand#34"
-        var6 = 20
+        jn = part_ds.merge(lineitem_ds, left_on="p_partkey", right_on="l_partkey")
 
-        jn = line_item_ds.merge(part_ds, left_on="l_partkey", right_on="p_partkey")
+        jn = jn[jn["l_shipmode"].isin(["AIR", "AIR REG"])]
+        jn = jn[jn["l_shipinstruct"] == "DELIVER IN PERSON"]
 
-        filt = jn[
-            (
-                (jn["p_brand"] == var1)
-                & (jn["p_container"].isin(["SM CASE", "SM BOX", "SM PACK", "SM PKG"]))
-                & (jn["l_quantity"] >= var4)
-                & (jn["l_quantity"] <= var4 + 10)
-                & (jn["p_size"] >= 1)
-                & (jn["p_size"] <= 5)
-                & (jn["l_shipmode"].isin(["AIR", "AIR REG"]))
-                & (jn["l_shipinstruct"] == "DELIVER IN PERSON")
-            )
-            | (
-                (jn["p_brand"] == var2)
-                & (jn["p_container"].isin(["MED BAG", "MED BOX", "MED PKG", "MED PACK"]))
-                & (jn["l_quantity"] >= var5)
-                & (jn["l_quantity"] <= var5 + 10)
-                & (jn["p_size"] >= 1)
-                & (jn["p_size"] <= 10)
-                & (jn["l_shipmode"].isin(["AIR", "AIR REG"]))
-                & (jn["l_shipinstruct"] == "DELIVER IN PERSON")
-            )
-            | (
-                (jn["p_brand"] == var3)
-                & (jn["p_container"].isin(["LG CASE", "LG BOX", "LG PACK", "LG PKG"]))
-                & (jn["l_quantity"] >= var6)
-                & (jn["l_quantity"] <= var6 + 10)
-                & (jn["p_size"] >= 1)
-                & (jn["p_size"] <= 15)
-                & (jn["l_shipmode"].isin(["AIR", "AIR REG"]))
-                & (jn["l_shipinstruct"] == "DELIVER IN PERSON")
-            )
-        ]
+        # Complex filter conditions
+        cond1 = (
+            (jn["p_brand"] == "Brand#12")
+            & jn["p_container"].isin(["SM CASE", "SM BOX", "SM PACK", "SM PKG"])
+            & (jn["l_quantity"] >= 1)
+            & (jn["l_quantity"] <= 11)
+            & (jn["p_size"] >= 1)
+            & (jn["p_size"] <= 5)
+        )
 
-        filt = filt.copy()
-        filt["revenue"] = filt["l_extendedprice"] * (1 - filt["l_discount"])
+        cond2 = (
+            (jn["p_brand"] == "Brand#23")
+            & jn["p_container"].isin(["MED BAG", "MED BOX", "MED PKG", "MED PACK"])
+            & (jn["l_quantity"] >= 10)
+            & (jn["l_quantity"] <= 20)
+            & (jn["p_size"] >= 1)
+            & (jn["p_size"] <= 10)
+        )
 
-        revenue = filt["revenue"].sum()
+        cond3 = (
+            (jn["p_brand"] == "Brand#34")
+            & jn["p_container"].isin(["LG CASE", "LG BOX", "LG PACK", "LG PKG"])
+            & (jn["l_quantity"] >= 20)
+            & (jn["l_quantity"] <= 30)
+            & (jn["p_size"] >= 1)
+            & (jn["p_size"] <= 15)
+        )
+
+        jn = jn[cond1 | cond2 | cond3]
+
+        revenue = round((jn["l_extendedprice"] * (1 - jn["l_discount"])).sum(), 2)
 
         result_df = pd.DataFrame({"revenue": [revenue]})
 
-        return result_df  # type: ignore[no-any-return]
+        return result_df
 
     utils.run_query(Q_NUM, query)
 
 
 if __name__ == "__main__":
     q()
-
-

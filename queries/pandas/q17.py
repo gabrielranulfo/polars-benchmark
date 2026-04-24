@@ -52,5 +52,3 @@ def q() -> None:
 
 if __name__ == "__main__":
     q()
-
-

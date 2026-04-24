@@ -1,88 +1,72 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pandas as pd
 
 from queries.pandas import utils
-
-if TYPE_CHECKING:
-    pass
 
 Q_NUM = 21
 
 
 def q() -> None:
-    supplier_ds = utils.get_supplier_ds
-    line_item_ds = utils.get_line_item_ds
-    orders_ds = utils.get_orders_ds
-    nation_ds = utils.get_nation_ds
+    lineitem_ds_fn = utils.get_line_item_ds
+    nation_ds_fn = utils.get_nation_ds
+    orders_ds_fn = utils.get_orders_ds
+    supplier_ds_fn = utils.get_supplier_ds
 
     # first call one time to cache in case we don't include the IO times
-    supplier_ds()
-    line_item_ds()
-    orders_ds()
-    nation_ds()
+    lineitem_ds_fn()
+    nation_ds_fn()
+    orders_ds_fn()
+    supplier_ds_fn()
 
     def query() -> pd.DataFrame:
-        nonlocal supplier_ds
-        nonlocal line_item_ds
-        nonlocal orders_ds
-        nonlocal nation_ds
-        supplier_ds = supplier_ds()
-        line_item_ds = line_item_ds()
-        orders_ds = orders_ds()
-        nation_ds = nation_ds()
+        lineitem_ds = lineitem_ds_fn()
+        nation_ds = nation_ds_fn()
+        orders_ds = orders_ds_fn()
+        supplier_ds = supplier_ds_fn()
 
         var1 = "SAUDI ARABIA"
 
-        # Linhas base com receiptdate > commitdate
-        l1 = line_item_ds[line_item_ds["l_receiptdate"] > line_item_ds["l_commitdate"]]
-
-        # EXISTS: existe outra linha no mesmo orderkey com suppkey diferente
-        orders_with_other_suppliers = line_item_ds.groupby("l_orderkey", as_index=False).agg(
-            supplier_count=pd.NamedAgg(column="l_suppkey", aggfunc="nunique")
+        # Find orders with multiple suppliers
+        supp_per_order = lineitem_ds.groupby("l_orderkey", as_index=False).agg(
+            n_supp_by_order=pd.NamedAgg(column="l_suppkey", aggfunc="count")
         )
-        orders_with_other_suppliers = orders_with_other_suppliers[
-            orders_with_other_suppliers["supplier_count"] > 1
-        ]["l_orderkey"]
+        multi_supp_orders = supp_per_order[supp_per_order["n_supp_by_order"] > 1]
 
-        # NOT EXISTS: não existe outra linha no mesmo orderkey com suppkey diferente
-        # E que também tenha receiptdate > commitdate
-        # Usa nunique para verificar se há apenas um suppkey único
-        other_late_suppliers = l1.groupby("l_orderkey", as_index=False).agg(
-            late_suppkey_count=pd.NamedAgg(column="l_suppkey", aggfunc="nunique"),
-            late_suppkey_unique=pd.NamedAgg(column="l_suppkey", aggfunc="first"),
-        )
-
-        jn1 = supplier_ds.merge(l1, left_on="s_suppkey", right_on="l_suppkey")
-        jn2 = jn1.merge(orders_ds, left_on="l_orderkey", right_on="o_orderkey")
-        jn3 = jn2[
-            (jn2["o_orderstatus"] == "F")
-            & (jn2["l_orderkey"].isin(orders_with_other_suppliers))
+        # Join with lineitem where receiptdate > commitdate
+        late_lineitem = lineitem_ds[
+            lineitem_ds["l_receiptdate"] > lineitem_ds["l_commitdate"]
         ]
+        jn1 = multi_supp_orders.merge(late_lineitem, on="l_orderkey", how="inner")
+
+        # Re-calculate suppliers per order for the late items
+        supp_per_order2 = jn1.groupby("l_orderkey", as_index=False).agg(
+            n_supp_by_order=pd.NamedAgg(column="l_suppkey", aggfunc="count")
+        )
+
+        # Join back with lineitem data
+        jn2 = supp_per_order2.merge(jn1, on="l_orderkey")
+
+        # Filter to orders where only one supplier was late
+        jn2 = jn2[jn2["n_supp_by_order_x"] == 1]
+
+        # Join with supplier, nation, and orders
+        jn3 = jn2.merge(supplier_ds, left_on="l_suppkey", right_on="s_suppkey")
         jn4 = jn3.merge(nation_ds, left_on="s_nationkey", right_on="n_nationkey")
-        jn5 = jn4[jn4["n_name"] == var1]
-        jn6 = jn5.merge(
-            other_late_suppliers, left_on="l_orderkey", right_on="l_orderkey", how="left"
-        )
+        jn5 = jn4.merge(orders_ds, left_on="l_orderkey", right_on="o_orderkey")
 
-        # Filtra NOT EXISTS: verifica se há apenas um suppkey único e é igual ao atual
-        jn6 = jn6.copy()
-        filt = jn6[
-            (jn6["late_suppkey_count"].isna())
-            | (
-                (jn6["late_suppkey_count"] == 1)
-                & (jn6["late_suppkey_unique"] == jn6["s_suppkey"])
-            )
-        ]
+        # Filter by nation and order status
+        jn5 = jn5[jn5["n_name"] == var1]
+        jn5 = jn5[jn5["o_orderstatus"] == "F"]
 
-        gb = filt.groupby("s_name", as_index=False)
-        agg = gb.agg(numwait=pd.NamedAgg(column="s_name", aggfunc="size"))
+        # Group by supplier name and count
+        gb = jn5.groupby("s_name", as_index=False)
+        agg = gb.size()
+        agg.columns = ["s_name", "numwait"]
 
-        result_df = agg.sort_values(by=["numwait", "s_name"], ascending=[False, True]).head(
-            100
-        )
+        result_df = agg.sort_values(
+            by=["numwait", "s_name"], ascending=[False, True]
+        ).head(100)
 
         return result_df  # type: ignore[no-any-return]
 
@@ -91,5 +75,3 @@ def q() -> None:
 
 if __name__ == "__main__":
     q()
-
-

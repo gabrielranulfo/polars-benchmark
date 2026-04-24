@@ -3,105 +3,78 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
-import pandas as pd
-
 from queries.pandas import utils
 
 if TYPE_CHECKING:
-    pass
+    import pandas as pd
 
 Q_NUM = 8
 
 
 def q() -> None:
-    part_ds = utils.get_part_ds
-    supplier_ds = utils.get_supplier_ds
-    line_item_ds = utils.get_line_item_ds
-    orders_ds = utils.get_orders_ds
-    customer_ds = utils.get_customer_ds
-    nation_ds = utils.get_nation_ds
-    region_ds = utils.get_region_ds
+    customer_ds_fn = utils.get_customer_ds
+    line_item_ds_fn = utils.get_line_item_ds
+    nation_ds_fn = utils.get_nation_ds
+    orders_ds_fn = utils.get_orders_ds
+    part_ds_fn = utils.get_part_ds
+    region_ds_fn = utils.get_region_ds
+    supplier_ds_fn = utils.get_supplier_ds
 
     # first call one time to cache in case we don't include the IO times
-    part_ds()
-    supplier_ds()
-    line_item_ds()
-    orders_ds()
-    customer_ds()
-    nation_ds()
-    region_ds()
+    customer_ds_fn()
+    line_item_ds_fn()
+    nation_ds_fn()
+    orders_ds_fn()
+    part_ds_fn()
+    region_ds_fn()
+    supplier_ds_fn()
 
     def query() -> pd.DataFrame:
-        nonlocal part_ds
-        nonlocal supplier_ds
-        nonlocal line_item_ds
-        nonlocal orders_ds
-        nonlocal customer_ds
-        nonlocal nation_ds
-        nonlocal region_ds
-        part_ds = part_ds()
-        supplier_ds = supplier_ds()
-        line_item_ds = line_item_ds()
-        orders_ds = orders_ds()
-        customer_ds = customer_ds()
-        nation_ds = nation_ds()
-        region_ds = region_ds()
+        customer_ds = customer_ds_fn()
+        line_item_ds = line_item_ds_fn()
+        nation_ds = nation_ds_fn()
+        orders_ds = orders_ds_fn()
+        part_ds = part_ds_fn()
+        region_ds = region_ds_fn()
+        supplier_ds = supplier_ds_fn()
 
-        var1 = "BRAZIL"  # :1 - nação do fornecedor
-        var2 = "AMERICA"  # :2 - região
-        var3 = "ECONOMY ANODIZED STEEL"  # :3 - tipo de peça
+        var1 = "BRAZIL"
+        var2 = "AMERICA"
+        var3 = "ECONOMY ANODIZED STEEL"
         var4 = date(1995, 1, 1)
         var5 = date(1996, 12, 31)
 
-        # Filtra a região
-        region_filtered = region_ds[region_ds["r_name"] == var2]
+        n1 = nation_ds.loc[:, ["n_nationkey", "n_regionkey"]]
+        n2 = nation_ds.loc[:, ["n_nationkey", "n_name"]]
 
-        # Filtra a nação do fornecedor
-        n2 = nation_ds[nation_ds["n_name"] == var1]
-
-        # Filtra o tipo de peça
-        part_filtered = part_ds[part_ds["p_type"] == var3]
-
-        # Faz os joins conforme a query SQL
-        jn1 = part_filtered.merge(line_item_ds, left_on="p_partkey", right_on="l_partkey")
+        jn1 = part_ds.merge(line_item_ds, left_on="p_partkey", right_on="l_partkey")
         jn2 = jn1.merge(supplier_ds, left_on="l_suppkey", right_on="s_suppkey")
         jn3 = jn2.merge(orders_ds, left_on="l_orderkey", right_on="o_orderkey")
         jn4 = jn3.merge(customer_ds, left_on="o_custkey", right_on="c_custkey")
-        jn5 = jn4.merge(nation_ds, left_on="c_nationkey", right_on="n_nationkey")
-        jn5 = jn5.rename(columns={"n_name": "cust_nation"})
-        jn6 = jn5.merge(region_filtered, left_on="n_regionkey", right_on="r_regionkey")
+        jn5 = jn4.merge(n1, left_on="c_nationkey", right_on="n_nationkey")
+        jn6 = jn5.merge(region_ds, left_on="n_regionkey", right_on="r_regionkey")
+
+        jn6 = jn6[(jn6["r_name"] == var2)]
+
         jn7 = jn6.merge(n2, left_on="s_nationkey", right_on="n_nationkey")
-        jn7 = jn7.rename(columns={"n_name": "supp_nation"})
 
-        # Filtra por data
-        all_nations = jn7[
-            (jn7["o_orderdate"] >= var4) & (jn7["o_orderdate"] <= var5)
-        ]
+        jn7 = jn7[(jn7["o_orderdate"] >= var4) & (jn7["o_orderdate"] <= var5)]
+        jn7 = jn7[jn7["p_type"] == var3]
 
-        # Calcula volume e ano
-        all_nations = all_nations.copy()
-        all_nations["o_year"] = all_nations["o_orderdate"].dt.year
-        all_nations["volume"] = all_nations["l_extendedprice"] * (
-            1 - all_nations["l_discount"]
-        )
+        jn7["o_year"] = jn7["o_orderdate"].dt.year
+        jn7["volume"] = jn7["l_extendedprice"] * (1.0 - jn7["l_discount"])
+        jn7 = jn7.rename(columns={"n_name": "nation"})
 
-        # Calcula participação de mercado
-        all_nations = all_nations.copy()
-        all_nations["nation_volume"] = all_nations.apply(
-            lambda row: row["volume"] if row["supp_nation"] == var1 else 0, axis=1
-        )
+        def udf(df: pd.DataFrame) -> float:
+            demonimator: float = df["volume"].sum()
+            df = df[df["nation"] == var1]
+            numerator: float = df["volume"].sum()
+            return round(numerator / demonimator, 2)
 
-        def calc_mkt_share(group):
-            o_year_val = group.name  # Nome do grupo é o valor de o_year
-            nation_vol = group[group["supp_nation"] == var1]["volume"].sum()
-            total_vol = group["volume"].sum()
-            mkt_share = nation_vol / total_vol if total_vol > 0 else 0
-            return pd.Series({"o_year": o_year_val, "mkt_share": mkt_share})
-
-        gb = all_nations.groupby("o_year")
-        result_df = gb.apply(calc_mkt_share, include_groups=False).reset_index(drop=True)
-
-        result_df = result_df.sort_values(by="o_year")
+        gb = jn7.groupby("o_year", as_index=False)
+        agg = gb.apply(udf, include_groups=False)
+        agg.columns = ["o_year", "mkt_share"]
+        result_df = agg.sort_values("o_year")
 
         return result_df  # type: ignore[no-any-return]
 
@@ -110,4 +83,3 @@ def q() -> None:
 
 if __name__ == "__main__":
     q()
-
