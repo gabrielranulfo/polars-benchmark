@@ -1,0 +1,197 @@
+---
+# PySpark Driver Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pyspark-driver
+  namespace: tpch-benchmark
+  labels:
+    app: pyspark-benchmark
+    component: driver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pyspark-benchmark
+      component: driver
+  template:
+    metadata:
+      labels:
+        app: pyspark-benchmark
+        component: driver
+    spec:
+      serviceAccountName: pyspark-sa
+      volumes:
+      - name: output-volume
+        persistentVolumeClaim:
+          claimName: tpch-output-pvc
+      containers:
+      - name: pyspark-driver
+        image: tpch-benchmark:pyspark-latest
+        imagePullPolicy: IfNotPresent
+        command: ["python", "-m", "queries.pyspark"]
+        env:
+        - name: SPARK_MASTER
+          value: "spark://pyspark-master:7077"
+        - name: SPARK_DRIVER_MEMORY
+          value: "4g"
+        - name: SPARK_EXECUTOR_MEMORY
+          value: "4g"
+        - name: SPARK_EXECUTOR_CORES
+          value: "2"
+        volumeMounts:
+        - name: output-volume
+          mountPath: /root/polars-benchmark/output
+        resources:
+          requests:
+            cpu: "1"
+            memory: "4Gi"
+          limits:
+            cpu: "2"
+            memory: "8Gi"
+        livenessProbe:
+          exec:
+            command: ["python", "--version"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+
+---
+# PySpark Master Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: pyspark-master
+  namespace: tpch-benchmark
+  labels:
+    app: pyspark-benchmark
+    component: master
+spec:
+  type: ClusterIP
+  selector:
+    app: pyspark-benchmark
+    component: master
+  ports:
+  - name: master
+    port: 7077
+    targetPort: 7077
+  - name: webui
+    port: 8080
+    targetPort: 8080
+
+---
+# PySpark Master Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pyspark-master
+  namespace: tpch-benchmark
+  labels:
+    app: pyspark-benchmark
+    component: master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pyspark-benchmark
+      component: master
+  template:
+    metadata:
+      labels:
+        app: pyspark-benchmark
+        component: master
+    spec:
+      serviceAccountName: pyspark-sa
+      volumes:
+      - name: output-volume
+        persistentVolumeClaim:
+          claimName: tpch-output-pvc
+      containers:
+      - name: pyspark-master
+        image: tpch-benchmark:pyspark-latest
+        imagePullPolicy: IfNotPresent
+        command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
+        args:
+        - "--host=0.0.0.0"
+        - "--port=7077"
+        - "--webui-port=8080"
+        ports:
+        - name: master
+          containerPort: 7077
+        - name: webui
+          containerPort: 8080
+        volumeMounts:
+        - name: output-volume
+          mountPath: /root/polars-benchmark/output
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+        livenessProbe:
+          tcpSocket:
+            port: 7077
+          initialDelaySeconds: 30
+          periodSeconds: 10
+
+---
+# PySpark Executors Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pyspark-executor
+  namespace: tpch-benchmark
+  labels:
+    app: pyspark-benchmark
+    component: executor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pyspark-benchmark
+      component: executor
+  template:
+    metadata:
+      labels:
+        app: pyspark-benchmark
+        component: executor
+    spec:
+      serviceAccountName: pyspark-sa
+      volumes:
+      - name: output-volume
+        persistentVolumeClaim:
+          claimName: tpch-output-pvc
+      containers:
+      - name: pyspark-executor
+        image: tpch-benchmark:pyspark-latest
+        imagePullPolicy: IfNotPresent
+        command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.executor.CoarseGrainedExecutorBackend"]
+        args:
+        - "--driver-url=spark://pyspark-driver:7077"
+        - "--executor-id={{POD_NAME}}"
+        - "--cores=2"
+        - "--app-id=tpch-benchmark"
+        - "--hostname=0.0.0.0"
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: SPARK_EXECUTOR_MEMORY
+          value: "4g"
+        volumeMounts:
+        - name: output-volume
+          mountPath: /root/polars-benchmark/output
+        resources:
+          requests:
+            cpu: "2"
+            memory: "4Gi"
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+        livenessProbe:
+          exec:
+            command: ["python", "--version"]
+          initialDelaySeconds: 30
+          periodSeconds: 10

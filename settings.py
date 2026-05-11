@@ -62,6 +62,42 @@ class Run(BaseSettings):
     )
 
 
+class Kubernetes(BaseSettings):
+    """Kubernetes and HPA configuration for distributed benchmarks"""
+    
+    # General
+    enabled: bool = os.getenv("K8S_ENABLED", "false").lower() == "true"
+    namespace: str = os.getenv("K8S_NAMESPACE", "tpch-benchmark")
+    
+    # Dask configuration
+    dask_scheduler_host: str = os.getenv("DASK_SCHEDULER_HOST", "dask-scheduler")
+    dask_scheduler_port: int = int(os.getenv("DASK_SCHEDULER_PORT", "8786"))
+    dask_worker_replicas_min: int = int(os.getenv("DASK_WORKER_REPLICAS_MIN", "2"))
+    dask_worker_replicas_max: int = int(os.getenv("DASK_WORKER_REPLICAS_MAX", "10"))
+    dask_worker_cpu_request: str = os.getenv("DASK_WORKER_CPU_REQUEST", "2")
+    dask_worker_memory_request: str = os.getenv("DASK_WORKER_MEMORY_REQUEST", "4Gi")
+    dask_worker_cpu_threshold: int = int(os.getenv("DASK_WORKER_CPU_THRESHOLD", "70"))
+    dask_worker_memory_threshold: int = int(os.getenv("DASK_WORKER_MEMORY_THRESHOLD", "80"))
+    
+    # PySpark configuration
+    pyspark_master_host: str = os.getenv("PYSPARK_MASTER_HOST", "pyspark-master")
+    pyspark_master_port: int = int(os.getenv("PYSPARK_MASTER_PORT", "7077"))
+    pyspark_executor_replicas_min: int = int(os.getenv("PYSPARK_EXECUTOR_REPLICAS_MIN", "2"))
+    pyspark_executor_replicas_max: int = int(os.getenv("PYSPARK_EXECUTOR_REPLICAS_MAX", "10"))
+    pyspark_executor_cpu_request: str = os.getenv("PYSPARK_EXECUTOR_CPU_REQUEST", "2")
+    pyspark_executor_memory_request: str = os.getenv("PYSPARK_EXECUTOR_MEMORY_REQUEST", "4Gi")
+    pyspark_executor_cpu_threshold: int = int(os.getenv("PYSPARK_EXECUTOR_CPU_THRESHOLD", "75"))
+    pyspark_executor_memory_threshold: int = int(os.getenv("PYSPARK_EXECUTOR_MEMORY_THRESHOLD", "80"))
+    
+    # HPA behavior
+    hpa_scale_up_window: int = int(os.getenv("HPA_SCALE_UP_WINDOW", "0"))
+    hpa_scale_down_window: int = int(os.getenv("HPA_SCALE_DOWN_WINDOW", "300"))
+    
+    model_config = SettingsConfigDict(
+        env_prefix="k8s_", env_file=".env", extra="ignore"
+    )
+
+
 class Plot(BaseSettings):
     show: bool = False
     n_queries: int = 7
@@ -77,6 +113,7 @@ class Settings(BaseSettings):
     paths: Paths = Paths()
     plot: Plot = Plot()
     run: Run = Run()
+    kubernetes: Kubernetes = Kubernetes()
 
     @computed_field  # type: ignore[misc]
     @property

@@ -1,0 +1,131 @@
+---
+# Dask Scheduler Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dask-scheduler
+  namespace: tpch-benchmark
+  labels:
+    app: dask-benchmark
+    component: scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dask-benchmark
+      component: scheduler
+  template:
+    metadata:
+      labels:
+        app: dask-benchmark
+        component: scheduler
+    spec:
+      serviceAccountName: dask-sa
+      volumes:
+      - name: output-volume
+        persistentVolumeClaim:
+          claimName: tpch-output-pvc
+      containers:
+      - name: dask-scheduler
+        image: tpch-benchmark:dask-latest
+        imagePullPolicy: IfNotPresent
+        command: ["dask-scheduler"]
+        ports:
+        - name: tcp
+          containerPort: 8786
+        - name: http
+          containerPort: 8787
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+        livenessProbe:
+          httpGet:
+            path: /status
+            port: 8787
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /status
+            port: 8787
+          initialDelaySeconds: 10
+          periodSeconds: 5
+
+---
+# Dask Scheduler Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: dask-scheduler
+  namespace: tpch-benchmark
+  labels:
+    app: dask-benchmark
+    component: scheduler
+spec:
+  type: ClusterIP
+  selector:
+    app: dask-benchmark
+    component: scheduler
+  ports:
+  - name: tcp
+    port: 8786
+    targetPort: 8786
+  - name: http
+    port: 8787
+    targetPort: 8787
+
+---
+# Dask Workers Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dask-worker
+  namespace: tpch-benchmark
+  labels:
+    app: dask-benchmark
+    component: worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dask-benchmark
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: dask-benchmark
+        component: worker
+    spec:
+      serviceAccountName: dask-sa
+      volumes:
+      - name: output-volume
+        persistentVolumeClaim:
+          claimName: tpch-output-pvc
+      containers:
+      - name: dask-worker
+        image: tpch-benchmark:dask-latest
+        imagePullPolicy: IfNotPresent
+        command: ["dask-worker", "dask-scheduler:8786"]
+        args:
+        - "--nthreads=2"
+        - "--memory-limit=4Gi"
+        - "--dashboard"
+        volumeMounts:
+        - name: output-volume
+          mountPath: /root/polars-benchmark/output
+        resources:
+          requests:
+            cpu: "2"
+            memory: "4Gi"
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+        livenessProbe:
+          exec:
+            command: ["dask-worker", "--version"]
+          initialDelaySeconds: 30
+          periodSeconds: 10

@@ -1,0 +1,32 @@
+---
+# PersistentVolume for benchmark outputs
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: tpch-output-pv
+  namespace: tpch-benchmark
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /data/tpch-benchmark/output
+    type: DirectoryOrCreate
+
+---
+# PersistentVolumeClaim for benchmark outputs
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tpch-output-pvc
+  namespace: tpch-benchmark
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 10Gi

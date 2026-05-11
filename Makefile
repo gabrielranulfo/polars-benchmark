@@ -87,6 +87,95 @@ clean-tpch-dbgen:  ## Clean up TPC-H folder
 clean-tables:  ## Clean up data tables
 	@rm -rf data/tables/
 
+# Kubernetes HPA targets
+.PHONY: docker-build-dask
+docker-build-dask:  ## Build Dask Docker image
+	docker build -t tpch-benchmark:dask-latest -f docker/Dockerfile.dask .
+
+.PHONY: docker-build-pyspark
+docker-build-pyspark:  ## Build PySpark Docker image
+	docker build -t tpch-benchmark:pyspark-latest -f docker/Dockerfile.pyspark .
+
+.PHONY: docker-build-all
+docker-build-all: docker-build-dask docker-build-pyspark  ## Build all Docker images
+
+.PHONY: k8s-deploy-dask
+k8s-deploy-dask:  ## Deploy Dask with HPA to Kubernetes
+	@chmod +x scripts/k8s/deploy.sh
+	@scripts/k8s/deploy.sh dask
+
+.PHONY: k8s-deploy-pyspark
+k8s-deploy-pyspark:  ## Deploy PySpark with HPA to Kubernetes
+	@chmod +x scripts/k8s/deploy.sh
+	@scripts/k8s/deploy.sh pyspark
+
+.PHONY: k8s-deploy-all
+k8s-deploy-all:  ## Deploy all benchmarks (Dask + PySpark) with HPA
+	@chmod +x scripts/k8s/deploy.sh
+	@scripts/k8s/deploy.sh all
+
+.PHONY: k8s-monitor-dask
+k8s-monitor-dask:  ## Monitor Dask HPA in real-time
+	@chmod +x scripts/k8s/monitor-hpa.sh
+	@scripts/k8s/monitor-hpa.sh dask
+
+.PHONY: k8s-monitor-pyspark
+k8s-monitor-pyspark:  ## Monitor PySpark HPA in real-time
+	@chmod +x scripts/k8s/monitor-hpa.sh
+	@scripts/k8s/monitor-hpa.sh pyspark
+
+.PHONY: k8s-monitor-all
+k8s-monitor-all:  ## Monitor all HPA in real-time
+	@chmod +x scripts/k8s/monitor-hpa.sh
+	@scripts/k8s/monitor-hpa.sh all
+
+.PHONY: k8s-load-test-dask
+k8s-load-test-dask:  ## Run load test for Dask (5 minutes)
+	@chmod +x scripts/k8s/load-test.sh
+	@scripts/k8s/load-test.sh dask 300
+
+.PHONY: k8s-load-test-pyspark
+k8s-load-test-pyspark:  ## Run load test for PySpark (5 minutes)
+	@chmod +x scripts/k8s/load-test.sh
+	@scripts/k8s/load-test.sh pyspark 300
+
+.PHONY: k8s-load-test-all
+k8s-load-test-all:  ## Run load test for all frameworks (5 minutes each)
+	@chmod +x scripts/k8s/load-test.sh
+	@scripts/k8s/load-test.sh dask 300
+	@scripts/k8s/load-test.sh pyspark 300
+
+.PHONY: k8s-cleanup-dask
+k8s-cleanup-dask:  ## Clean up Dask Kubernetes resources
+	@chmod +x scripts/k8s/cleanup.sh
+	@scripts/k8s/cleanup.sh dask
+
+.PHONY: k8s-cleanup-pyspark
+k8s-cleanup-pyspark:  ## Clean up PySpark Kubernetes resources
+	@chmod +x scripts/k8s/cleanup.sh
+	@scripts/k8s/cleanup.sh pyspark
+
+.PHONY: k8s-cleanup-all
+k8s-cleanup-all:  ## Clean up all Kubernetes resources
+	@chmod +x scripts/k8s/cleanup.sh
+	@scripts/k8s/cleanup.sh all
+
+.PHONY: k8s-status
+k8s-status:  ## Show Kubernetes cluster status
+	@echo "=== Namespace ==="
+	@kubectl get namespace tpch-benchmark 2>/dev/null || echo "Namespace not found"
+	@echo "\n=== Pods ==="
+	@kubectl get pods -n tpch-benchmark 2>/dev/null || echo "No pods found"
+	@echo "\n=== HPA Status ==="
+	@kubectl get hpa -n tpch-benchmark 2>/dev/null || echo "No HPA found"
+	@echo "\n=== Services ==="
+	@kubectl get services -n tpch-benchmark 2>/dev/null || echo "No services found"
+
+.PHONY: k8s-extract-results
+k8s-extract-results:  ## Extract benchmark results from Kubernetes (timings, memory, CPU monitors)
+	@chmod +x scripts/k8s/extract-results.sh
+	@scripts/k8s/extract-results.sh
+
 .PHONY: help
 help:  ## Display this help screen
 	@echo -e "\033[1mAvailable commands:\033[0m"
