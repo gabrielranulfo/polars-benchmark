@@ -27,7 +27,7 @@ spec:
           claimName: tpch-output-pvc
       containers:
       - name: pyspark-driver
-        image: tpch-benchmark:pyspark-latest
+        image: gabrielranulfo/tpch-benchmark:pyspark-latest
         imagePullPolicy: IfNotPresent
         command: ["python", "-m", "queries.pyspark"]
         env:
@@ -107,7 +107,7 @@ spec:
           claimName: tpch-output-pvc
       containers:
       - name: pyspark-master
-        image: tpch-benchmark:pyspark-latest
+        image: gabrielranulfo/tpch-benchmark:pyspark-latest
         imagePullPolicy: IfNotPresent
         command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
         args:
@@ -164,7 +164,7 @@ spec:
           claimName: tpch-output-pvc
       containers:
       - name: pyspark-executor
-        image: tpch-benchmark:pyspark-latest
+        image: gabrielranulfo/tpch-benchmark:pyspark-latest
         imagePullPolicy: IfNotPresent
         command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.executor.CoarseGrainedExecutorBackend"]
         args:

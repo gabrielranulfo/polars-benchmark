@@ -109,14 +109,14 @@ scripts/k8s/
 
 ```bash
 # Dask
-docker build -t tpch-benchmark:dask-latest -f docker/Dockerfile.dask .
+docker build -t gabrielranulfo/tpch-benchmark:dask-latest -f docker/Dockerfile.dask .
 
 # PySpark
-docker build -t tpch-benchmark:pyspark-latest -f docker/Dockerfile.pyspark .
+docker build -t gabrielranulfo/tpch-benchmark:pyspark-latest -f docker/Dockerfile.pyspark .
 
-# Push para registry (opcional)
-docker tag tpch-benchmark:dask-latest your-registry/tpch-benchmark:dask-latest
-docker push your-registry/tpch-benchmark:dask-latest
+# Push para Docker Hub
+docker push gabrielranulfo/tpch-benchmark:dask-latest
+docker push gabrielranulfo/tpch-benchmark:pyspark-latest
 ```
 
 ### 2. Preparar o Cluster
@@ -344,7 +344,7 @@ kubectl describe nodes
 kubectl debug node/<node-name> -it --image=ubuntu
 
 # Pull da imagem manualmente
-docker pull tpch-benchmark:dask-latest
+docker pull gabrielranulfo/tpch-benchmark:dask-latest
 ```
 
 ## Limpeza

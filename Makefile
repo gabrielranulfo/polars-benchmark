@@ -2,6 +2,8 @@
 
 PYTHONPATH=
 SHELL=/bin/bash
+DOCKERHUB_USER=gabrielranulfo
+IMAGE_REPO=$(DOCKERHUB_USER)/tpch-benchmark
 VENV=.venv
 VENV_BIN=$(VENV)/bin
 
@@ -90,14 +92,25 @@ clean-tables:  ## Clean up data tables
 # Kubernetes HPA targets
 .PHONY: docker-build-dask
 docker-build-dask:  ## Build Dask Docker image
-	docker build -t tpch-benchmark:dask-latest -f docker/Dockerfile.dask .
+	docker build -t $(IMAGE_REPO):dask-latest -f docker/Dockerfile.dask .
 
 .PHONY: docker-build-pyspark
 docker-build-pyspark:  ## Build PySpark Docker image
-	docker build -t tpch-benchmark:pyspark-latest -f docker/Dockerfile.pyspark .
+	docker build -t $(IMAGE_REPO):pyspark-latest -f docker/Dockerfile.pyspark .
 
 .PHONY: docker-build-all
 docker-build-all: docker-build-dask docker-build-pyspark  ## Build all Docker images
+
+.PHONY: docker-push-dask
+docker-push-dask: docker-build-dask  ## Push Dask Docker image to Docker Hub
+	docker push $(IMAGE_REPO):dask-latest
+
+.PHONY: docker-push-pyspark
+docker-push-pyspark: docker-build-pyspark  ## Push PySpark Docker image to Docker Hub
+	docker push $(IMAGE_REPO):pyspark-latest
+
+.PHONY: docker-push-all
+docker-push-all: docker-push-dask docker-push-pyspark  ## Push all Docker images to Docker Hub
 
 .PHONY: k8s-deploy-dask
 k8s-deploy-dask:  ## Deploy Dask with HPA to Kubernetes

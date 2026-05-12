@@ -27,7 +27,7 @@ spec:
           claimName: tpch-output-pvc
       containers:
       - name: dask-scheduler
-        image: tpch-benchmark:dask-latest
+        image: gabrielranulfo/tpch-benchmark:dask-latest
         imagePullPolicy: IfNotPresent
         command: ["dask-scheduler"]
         ports:
@@ -107,7 +107,7 @@ spec:
           claimName: tpch-output-pvc
       containers:
       - name: dask-worker
-        image: tpch-benchmark:dask-latest
+        image: gabrielranulfo/tpch-benchmark:dask-latest
         imagePullPolicy: IfNotPresent
         command: ["dask-worker", "dask-scheduler:8786"]
         args:

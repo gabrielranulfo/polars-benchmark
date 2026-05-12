@@ -54,7 +54,7 @@ spec:
   serviceAccountName: dask-sa
   containers:
   - name: dask-load-test
-    image: tpch-benchmark:dask-latest
+    image: gabrielranulfo/tpch-benchmark:dask-latest
     imagePullPolicy: IfNotPresent
     command: ["python"]
     args:
@@ -110,7 +110,7 @@ spec:
   serviceAccountName: pyspark-sa
   containers:
   - name: pyspark-load-test
-    image: tpch-benchmark:pyspark-latest
+    image: gabrielranulfo/tpch-benchmark:pyspark-latest
     imagePullPolicy: IfNotPresent
     command: ["python"]
     args:
