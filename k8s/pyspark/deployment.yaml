@@ -31,6 +31,8 @@ spec:
         imagePullPolicy: IfNotPresent
         command: ["python", "-m", "queries.pyspark"]
         env:
+        - name: RUN_PYSPARK_MASTER
+          value: "spark://pyspark-master:7077"
         - name: SPARK_MASTER
           value: "spark://pyspark-master:7077"
         - name: SPARK_DRIVER_MEMORY
@@ -39,6 +41,8 @@ spec:
           value: "4g"
         - name: SPARK_EXECUTOR_CORES
           value: "2"
+        - name: RUN_LOG_TIMINGS
+          value: "1"
         volumeMounts:
         - name: output-volume
           mountPath: /root/polars-benchmark/output

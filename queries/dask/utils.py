@@ -20,7 +20,12 @@ if TYPE_CHECKING:
 
 settings = Settings()
 
-dask.config.set(scheduler="threads")
+scheduler = settings.run.dask_scheduler
+if scheduler and scheduler != "threads":
+    from dask.distributed import Client
+    client = Client(scheduler)
+else:
+    dask.config.set(scheduler="threads")
 
 
 def read_ds(table_name: str) -> DataFrame:

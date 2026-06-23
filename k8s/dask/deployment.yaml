@@ -110,6 +110,11 @@ spec:
         image: gabrielranulfo/tpch-benchmark:dask-latest
         imagePullPolicy: IfNotPresent
         command: ["dask-worker", "dask-scheduler:8786"]
+        env:
+        - name: RUN_DASK_SCHEDULER
+          value: "tcp://dask-scheduler:8786"
+        - name: RUN_LOG_TIMINGS
+          value: "1"
         args:
         - "--nthreads=2"
         - "--memory-limit=4Gi"

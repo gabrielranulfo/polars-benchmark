@@ -52,10 +52,24 @@ class Run(BaseSettings):
     spark_executor_memory: str = os.getenv("SPARK_EXECUTOR_MEMORY", "55g")
     spark_log_level: str = "ERROR"
 
+    # Library selection — comma-separated list of libraries to run
+    libraries: str = "polars,pandas,duckdb,dask,pyspark,modin"
+
+    # Dask scheduler: "threads" for local, or "tcp://dask-scheduler:8786" for distributed
+    dask_scheduler: str = "threads"
+
+    # PySpark master: "local[*]" for local, or "spark://pyspark-master:7077" for distributed
+    # Falls back to SPARK_MASTER env var (used by K8s deployment)
+    pyspark_master: str = os.getenv("SPARK_MASTER", "local[*]")
+
     @computed_field  # type: ignore[misc]
     @property
     def include_io(self) -> bool:
         return self.io_type != "skip"
+
+    @property
+    def enabled_libraries(self) -> list[str]:
+        return [lib.strip() for lib in self.libraries.split(",") if lib.strip()]
 
     model_config = SettingsConfigDict(
         env_prefix="run_", env_file=".env", extra="ignore"

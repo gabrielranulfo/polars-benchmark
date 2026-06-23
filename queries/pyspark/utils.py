@@ -25,9 +25,12 @@ def get_or_create_spark() -> SparkSession:
     os.environ['SPARK_SUBMIT_OPTS'] = '-Djava.security.manager=allow'
     os.environ['_JAVA_OPTIONS'] = '-Djava.security.manager=allow'
     
-    spark = (
+    master_url = settings.run.pyspark_master
+    is_distributed = master_url != "local[*]"
+    
+    spark_builder = (
         SparkSession.builder.appName("spark_queries")
-        .master("local[*]")
+        .master(master_url)
         .config("spark.driver.memory", settings.run.spark_driver_memory)
         .config("spark.executor.memory", settings.run.spark_executor_memory)
         .config("spark.log.level", settings.run.spark_log_level)
@@ -37,8 +40,19 @@ def get_or_create_spark() -> SparkSession:
         .config("spark.hadoop.security.authentication", "simple")
         .config("spark.sql.adaptive.enabled", "true")
         .config("spark.sql.legacy.timeParserPolicy", "LEGACY")
-        .getOrCreate()
     )
+    
+    if is_distributed:
+        spark_builder = (
+            spark_builder
+            .config("spark.dynamicAllocation.enabled", "true")
+            .config("spark.dynamicAllocation.minExecutors", "1")
+            .config("spark.dynamicAllocation.maxExecutors", "10")
+            .config("spark.dynamicAllocation.initialExecutors", "2")
+            .config("spark.shuffle.service.enabled", "true")
+        )
+    
+    spark = spark_builder.getOrCreate()
     
     # Reduzir logging
     spark.sparkContext.setLogLevel("ERROR")
