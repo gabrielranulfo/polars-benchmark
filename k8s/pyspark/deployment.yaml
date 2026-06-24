@@ -46,6 +46,10 @@ spec:
         - "spark.executor.memory=$(SPARK_EXECUTOR_MEMORY)"
         - "--conf"
         - "spark.executor.cores=$(SPARK_EXECUTOR_CORES)"
+        - "--conf"
+        - "spark.shuffle.service.enabled=false"
+        - "--conf"
+        - "spark.dynamicAllocation.shuffleTracking.enabled=true"
         - "/root/polars-benchmark/queries/pyspark/__main__.py"
         env:
         - name: RUN_PYSPARK_MASTER
