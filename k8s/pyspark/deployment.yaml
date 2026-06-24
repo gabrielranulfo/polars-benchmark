@@ -33,15 +33,20 @@ spec:
         image: gabrielranulfo/tpch-benchmark:pyspark-latest
         imagePullPolicy: Always
         command:
-        - "sh"
-        - "-c"
-        - |
-          mkdir -p /usr/local/lib/python3.11/dist-packages/pyspark/conf && cat > /usr/local/lib/python3.11/dist-packages/pyspark/conf/spark-defaults.conf <<EOF
-          spark.driver.host ${POD_IP}
-          spark.driver.bindAddress 0.0.0.0
-          spark.driver.port 0
-          EOF
-          exec python -m queries.pyspark
+        - "/usr/local/lib/python3.11/dist-packages/pyspark/bin/spark-submit"
+        - "--master"
+        - "spark://pyspark-master:7077"
+        - "--conf"
+        - "spark.driver.host=$(POD_IP)"
+        - "--conf"
+        - "spark.driver.bindAddress=0.0.0.0"
+        - "--conf"
+        - "spark.driver.memory=$(SPARK_DRIVER_MEMORY)"
+        - "--conf"
+        - "spark.executor.memory=$(SPARK_EXECUTOR_MEMORY)"
+        - "--conf"
+        - "spark.executor.cores=$(SPARK_EXECUTOR_CORES)"
+        - "/root/polars-benchmark/queries/pyspark/__main__.py"
         env:
         - name: RUN_PYSPARK_MASTER
           value: "spark://pyspark-master:7077"
