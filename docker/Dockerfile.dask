@@ -4,7 +4,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV SCALE_FACTOR=1.0
 
-RUN apt-get update && apt-get install -y software-properties-common \
+RUN apt-get update -o Acquire::AllowInsecureRepositories=true \
+    && apt-get install -y --no-install-recommends --allow-unauthenticated \
+       software-properties-common ca-certificates gnupg \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get update \
     && add-apt-repository ppa:deadsnakes/ppa -y \
     && apt-get update
 
