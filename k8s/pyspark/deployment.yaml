@@ -32,7 +32,16 @@ spec:
       - name: pyspark-driver
         image: gabrielranulfo/tpch-benchmark:pyspark-latest
         imagePullPolicy: Always
-        command: ["python", "-m", "queries.pyspark"]
+        command:
+        - "sh"
+        - "-c"
+        - |
+          cat > /usr/local/lib/python3.11/dist-packages/pyspark/conf/spark-defaults.conf <<EOF
+          spark.driver.host ${POD_IP}
+          spark.driver.bindAddress 0.0.0.0
+          spark.driver.port 0
+          EOF
+          exec python -m queries.pyspark
         env:
         - name: RUN_PYSPARK_MASTER
           value: "spark://pyspark-master:7077"

@@ -28,14 +28,15 @@ def get_or_create_spark() -> SparkSession:
     
     master_url = settings.run.pyspark_master
     is_distributed = master_url != "local[*]"
-    
+
     spark_builder = (
         SparkSession.builder.appName("spark_queries")
         .master(master_url)
         .config("spark.driver.memory", settings.run.spark_driver_memory)
         .config("spark.executor.memory", settings.run.spark_executor_memory)
         .config("spark.log.level", settings.run.spark_log_level)
-        # Configurações para desabilitar segurança
+        .config("spark.driver.host", os.environ.get('POD_IP', '127.0.0.1'))
+        .config("spark.driver.bindAddress", "0.0.0.0")
         .config("spark.driver.extraJavaOptions", "-Djava.security.manager=allow -Djava.security.policy==")
         .config("spark.executor.extraJavaOptions", "-Djava.security.manager=allow -Djava.security.policy==")
         .config("spark.hadoop.security.authentication", "simple")
@@ -50,7 +51,7 @@ def get_or_create_spark() -> SparkSession:
             .config("spark.dynamicAllocation.minExecutors", "1")
             .config("spark.dynamicAllocation.maxExecutors", "10")
             .config("spark.dynamicAllocation.initialExecutors", "2")
-            .config("spark.shuffle.service.enabled", "true")
+            .config("spark.dynamicAllocation.shuffleTracking.enabled", "true")
         )
     
     spark = spark_builder.getOrCreate()
