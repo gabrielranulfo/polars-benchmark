@@ -36,7 +36,7 @@ spec:
         - "sh"
         - "-c"
         - |
-          cat > /usr/local/lib/python3.11/dist-packages/pyspark/conf/spark-defaults.conf <<EOF
+          mkdir -p /usr/local/lib/python3.11/dist-packages/pyspark/conf && cat > /usr/local/lib/python3.11/dist-packages/pyspark/conf/spark-defaults.conf <<EOF
           spark.driver.host ${POD_IP}
           spark.driver.bindAddress 0.0.0.0
           spark.driver.port 0
