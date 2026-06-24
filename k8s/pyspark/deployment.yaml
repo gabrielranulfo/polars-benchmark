@@ -36,15 +36,7 @@ spec:
         - "sh"
         - "-c"
         - |
-          python3 -c "
-import re
-with open('/root/polars-benchmark/queries/pyspark/utils.py') as f:
-    c = f.read()
-c = c.replace('\"spark.shuffle.service.enabled\", \"true\"', '\"spark.shuffle.service.enabled\", \"false\"')
-c = c.replace(\"os.environ['SPARK_LOCAL_IP'] = '127.0.0.1'\", \"if 'SPARK_LOCAL_IP' not in os.environ: os.environ['SPARK_LOCAL_IP'] = '127.0.0.1'\")
-with open('/root/polars-benchmark/queries/pyspark/utils.py', 'w') as f:
-    f.write(c)
-"
+          python3 -c "c=open('/root/polars-benchmark/queries/pyspark/utils.py').read();c=c.replace('\"spark.shuffle.service.enabled\", \"true\"','\"spark.shuffle.service.enabled\", \"false\"');c=c.replace(\"os.environ['SPARK_LOCAL_IP'] = '127.0.0.1'\",\"if 'SPARK_LOCAL_IP' not in os.environ: os.environ['SPARK_LOCAL_IP'] = '127.0.0.1'\");open('/root/polars-benchmark/queries/pyspark/utils.py','w').write(c)"
           exec python -m queries.pyspark
         env:
         - name: RUN_PYSPARK_MASTER
