@@ -113,8 +113,9 @@ spec:
       - name: pyspark-master
         image: gabrielranulfo/tpch-benchmark:pyspark-latest
         imagePullPolicy: Always
-        command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
-        args:
+        command:
+        - "/usr/local/lib/python3.11/dist-packages/pyspark/bin/spark-class"
+        - "org.apache.spark.deploy.master.Master"
         - "--host=0.0.0.0"
         - "--port=7077"
         - "--webui-port=8080"
@@ -170,8 +171,9 @@ spec:
       - name: pyspark-executor
         image: gabrielranulfo/tpch-benchmark:pyspark-latest
         imagePullPolicy: Always
-        command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.executor.CoarseGrainedExecutorBackend"]
-        args:
+        command:
+        - "/usr/local/lib/python3.11/dist-packages/pyspark/bin/spark-class"
+        - "org.apache.spark.deploy.executor.CoarseGrainedExecutorBackend"
         - "--driver-url=spark://pyspark-driver:7077"
         - "--executor-id={{POD_NAME}}"
         - "--cores=2"

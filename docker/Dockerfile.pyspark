@@ -38,10 +38,5 @@ RUN pip3 install --no-cache-dir --upgrade pip uv && \
 
 ENV PYTHONPATH=/root/polars-benchmark
 
-# Cria symlink para o Spark instalado via pip (para os comandos nos deployments)
-RUN SPARK_HOME=$(python3 -c "import pyspark; import os; print(os.path.dirname(pyspark.__file__))") \
-    && ln -sf $SPARK_HOME /opt/spark \
-    && echo "SPARK_HOME=$SPARK_HOME -> /opt/spark"
-
 # PySpark command
 CMD ["python", "-m", "queries.pyspark"]
