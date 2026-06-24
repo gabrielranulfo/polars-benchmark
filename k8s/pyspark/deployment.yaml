@@ -116,9 +116,12 @@ spec:
         command:
         - "/usr/local/lib/python3.11/dist-packages/pyspark/bin/spark-class"
         - "org.apache.spark.deploy.master.Master"
-        - "--host=0.0.0.0"
-        - "--port=7077"
-        - "--webui-port=8080"
+        - "--host"
+        - "0.0.0.0"
+        - "--port"
+        - "7077"
+        - "--webui-port"
+        - "8080"
         ports:
         - name: master
           containerPort: 7077
@@ -174,11 +177,14 @@ spec:
         command:
         - "/usr/local/lib/python3.11/dist-packages/pyspark/bin/spark-class"
         - "org.apache.spark.deploy.executor.CoarseGrainedExecutorBackend"
-        - "--driver-url=spark://pyspark-driver:7077"
-        - "--executor-id={{POD_NAME}}"
-        - "--cores=2"
-        - "--app-id=tpch-benchmark"
-        - "--hostname=0.0.0.0"
+        - "--driver-url"
+        - "spark://pyspark-driver:7077"
+        - "--executor-id"
+        - "{{POD_NAME}}"
+        - "--cores"
+        - "2"
+        - "--app-id"
+        - "tpch-benchmark"
         env:
         - name: POD_NAME
           valueFrom:
