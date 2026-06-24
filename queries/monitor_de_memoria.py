@@ -24,6 +24,9 @@ class MemoryMonitor:
         self.query_number = None
         self.library_name = None
 
+        # Cria o diretório se não existir
+        Path(self.log_file).parent.mkdir(parents=True, exist_ok=True)
+
         # Verifica se o arquivo já existe e contém dados
         if not Path(self.log_file).exists() or Path(self.log_file).stat().st_size == 0:
             # Inicializa o arquivo CSV com cabeçalhos apenas se ele estiver vazio ou não existir

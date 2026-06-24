@@ -22,6 +22,8 @@ class CpuMonitor:
         self.last_children_cpu = {}
         self.last_sys_cpu = None
 
+        Path(self.log_file).parent.mkdir(parents=True, exist_ok=True)
+
         if not Path(self.log_file).exists() or Path(self.log_file).stat().st_size == 0:
             with open(self.log_file, mode="a", newline="") as file:
                 writer = csv.writer(file)
