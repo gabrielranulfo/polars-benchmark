@@ -33,24 +33,19 @@ spec:
         image: gabrielranulfo/tpch-benchmark:pyspark-latest
         imagePullPolicy: Always
         command:
-        - "/usr/local/lib/python3.11/dist-packages/pyspark/bin/spark-submit"
-        - "--master"
-        - "spark://pyspark-master:7077"
-        - "--conf"
-        - "spark.driver.host=$(POD_IP)"
-        - "--conf"
-        - "spark.driver.bindAddress=0.0.0.0"
-        - "--conf"
-        - "spark.driver.memory=$(SPARK_DRIVER_MEMORY)"
-        - "--conf"
-        - "spark.executor.memory=$(SPARK_EXECUTOR_MEMORY)"
-        - "--conf"
-        - "spark.executor.cores=$(SPARK_EXECUTOR_CORES)"
-        - "--conf"
-        - "spark.shuffle.service.enabled=false"
-        - "--conf"
-        - "spark.dynamicAllocation.shuffleTracking.enabled=true"
-        - "/root/polars-benchmark/queries/pyspark/__main__.py"
+        - "sh"
+        - "-c"
+        - |
+          python3 -c "
+import re
+with open('/root/polars-benchmark/queries/pyspark/utils.py') as f:
+    c = f.read()
+c = c.replace('\"spark.shuffle.service.enabled\", \"true\"', '\"spark.shuffle.service.enabled\", \"false\"')
+c = c.replace(\"os.environ['SPARK_LOCAL_IP'] = '127.0.0.1'\", \"if 'SPARK_LOCAL_IP' not in os.environ: os.environ['SPARK_LOCAL_IP'] = '127.0.0.1'\")
+with open('/root/polars-benchmark/queries/pyspark/utils.py', 'w') as f:
+    f.write(c)
+"
+          exec python -m queries.pyspark
         env:
         - name: RUN_PYSPARK_MASTER
           value: "spark://pyspark-master:7077"
