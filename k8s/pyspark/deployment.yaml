@@ -28,7 +28,7 @@ spec:
       containers:
       - name: pyspark-driver
         image: gabrielranulfo/tpch-benchmark:pyspark-latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         command: ["python", "-m", "queries.pyspark"]
         env:
         - name: RUN_PYSPARK_MASTER
@@ -112,7 +112,7 @@ spec:
       containers:
       - name: pyspark-master
         image: gabrielranulfo/tpch-benchmark:pyspark-latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
         args:
         - "--host=0.0.0.0"
@@ -169,7 +169,7 @@ spec:
       containers:
       - name: pyspark-executor
         image: gabrielranulfo/tpch-benchmark:pyspark-latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.executor.CoarseGrainedExecutorBackend"]
         args:
         - "--driver-url=spark://pyspark-driver:7077"

@@ -28,7 +28,7 @@ spec:
       containers:
       - name: dask-scheduler
         image: gabrielranulfo/tpch-benchmark:dask-latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         command: ["dask-scheduler"]
         ports:
         - name: tcp
@@ -108,7 +108,7 @@ spec:
       containers:
       - name: dask-worker
         image: gabrielranulfo/tpch-benchmark:dask-latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         command: ["dask-worker", "dask-scheduler:8786"]
         env:
         - name: RUN_DASK_SCHEDULER
