@@ -1,0 +1,32 @@
+---
+# PersistentVolume for TPC-H data tables
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: tpch-data-pv
+  namespace: tpch-benchmark
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /data/tpch-benchmark/tables
+    type: DirectoryOrCreate
+
+---
+# PersistentVolumeClaim for TPC-H data tables
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tpch-data-pvc
+  namespace: tpch-benchmark
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 10Gi

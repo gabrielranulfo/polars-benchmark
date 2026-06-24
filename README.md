@@ -71,6 +71,44 @@ make tables SCALE_FACTOR=1
 
 Para gerar datasets maiores: `SCALE_FACTOR=10` (~10GB), `SCALE_FACTOR=100` (~100GB).
 
+### Sincronizar Dados para o Kubernetes
+
+O cluster K8s usa um PVC separado (`tpch-data-pvc`) que monta os dados em `/root/polars-benchmark/data/tables/` dentro dos pods. Para disponibilizar os dados no cluster:
+
+```bash
+# Na máquina que gerou os dados, copiar para a máquina do cluster
+# (ex: SCP, USB drive, etc.) até o diretório data/tables/ do repositório.
+
+# Já na máquina do cluster, copiar os dados para todos os nós KIND:
+./scripts/k8s/copy-data-to-kind.sh [SCALE_FACTOR]
+```
+
+### Mudar Escala no Kubernetes
+
+Para executar o benchmark com outro scale factor no cluster:
+
+1. **Gerar os dados** na máquina onde os dados TPC-H são gerados:
+   ```bash
+   make tables SCALE_FACTOR=10
+   ```
+
+2. **Transferir** a pasta `data/tables/scale-10/` para a máquina do cluster K8s.
+
+3. **Copiar para todos os nós KIND** na máquina do cluster:
+   ```bash
+   ./scripts/k8s/copy-data-to-kind.sh 10
+   ```
+
+4. **Configurar o scale factor** nos deployments:
+   ```bash
+   kubectl set env deployment/pyspark-driver SCALE_FACTOR=10
+   kubectl set env deployment/pyspark-master SCALE_FACTOR=10
+   kubectl set env deployment/pyspark-executor SCALE_FACTOR=10
+   kubectl delete pod -n tpch-benchmark --all
+   ```
+
+O código lê `SCALE_FACTOR` (default `1.0` em `settings.py:125`) e monta o path `data/tables/scale-{factor}/` automaticamente.
+
 ---
 
 ## Executar Benchmarks
@@ -186,11 +224,12 @@ Isso cria no namespace `tpch-benchmark`:
 | **Scheduler/Master** | `dask-scheduler` | `pyspark-master` |
 | **Workers/Executors** | `dask-worker` (começa com 2) | `pyspark-executor` (começa com 2) |
 | **HPA** | `dask-worker-hpa` | `pyspark-executor-hpa` |
-| **Persistência** | PVC `tpch-output-pvc` | PVC `tpch-output-pvc` |
+| **Persistência (saídas)** | PVC `tpch-output-pvc` | PVC `tpch-output-pvc` |
+| **Persistência (dados TPC-H)** | PVC `tpch-data-pvc` | PVC `tpch-data-pvc` |
 
 ### Configurar Modo Distribuído no K8s
 
-O deploy em K8s precisa das variáveis de ambiente para ativar o modo distribuído. Edite os deployments ou use `kubectl set env`:
+Os deployments em K8s já incluem essas variáveis nos manifestos YAML (ver `k8s/pyspark/deployment.yaml` e `k8s/dask/deployment.yaml`). Apenas certifique-se de que os dados foram copiados para os nós (veja [Sincronizar Dados para o Kubernetes](#sincronizar-dados-para-o-kubernetes)).
 
 ```shell
 # Dask — worker conecta ao scheduler
@@ -242,6 +281,8 @@ make k8s-monitor-dask
 ```
 
 ### Extrair Resultados
+
+Os resultados das execuções ficam no PVC `tpch-output-pvc` (montado em `/root/polars-benchmark/output/run/`). Para extraí-los:
 
 ```shell
 # Extrair timings, CPU e memória do cluster
@@ -298,6 +339,17 @@ export RUN_PYSPARK_MASTER="spark://pyspark-master:7077"
 export K8S_ENABLED="true"
 export SCALE_FACTOR=1
 ```
+
+### Fluxo entre máquinas
+
+Este repositório é usado em duas máquinas diferentes:
+
+| Máquina | Função | Comandos típicos |
+|---------|--------|------------------|
+| **Máquina onde os dados TPC-H são gerados** | Geração dos dados, build das imagens Docker, desenvolvimento local | `make tables`, `make docker-build-all`, `make run-polars` |
+| **Máquina do cluster K8s** | Execução distribuída no Kubernetes | `make k8s-deploy-all`, `./scripts/k8s/copy-data-to-kind.sh` |
+
+Os dados gerados na primeira máquina devem ser transferidos para a segunda (via SCP, pendrive, etc.) antes de executar `copy-data-to-kind.sh`.
 
 ---
 

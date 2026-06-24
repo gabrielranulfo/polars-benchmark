@@ -48,8 +48,9 @@ kubectl apply -f "$PROJECT_ROOT/k8s/base/namespace.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/base/rbac.yaml"
 
 # Deploy persistence
-log_info "Deploying persistent volume for benchmark outputs..."
+log_info "Deploying persistent volumes..."
 kubectl apply -f "$PROJECT_ROOT/k8s/base/persistence.yaml"
+kubectl apply -f "$PROJECT_ROOT/k8s/base/data-persistence.yaml"
 
 # Deploy Dask or PySpark
 case $TARGET in
