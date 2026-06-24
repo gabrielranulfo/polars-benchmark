@@ -92,7 +92,7 @@ k8s/
 │   └── hpa.yaml       # HPA para workers
 └── pyspark/           # Configurações do PySpark
     ├── deployment.yaml
-    └── hpa.yaml       # HPA para executors
+    └── hpa.yaml       # HPA para workers
 docker/
 ├── Dockerfile.dask    # Imagem otimizada para Dask
 └── Dockerfile.pyspark # Imagem otimizada para PySpark

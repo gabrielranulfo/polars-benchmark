@@ -21,7 +21,8 @@ def get_or_create_spark() -> SparkSession:
     import os
     
     # Configurações agressivas para evitar problemas de segurança
-    os.environ['SPARK_LOCAL_IP'] = '127.0.0.1'
+    if 'SPARK_LOCAL_IP' not in os.environ:
+        os.environ['SPARK_LOCAL_IP'] = '127.0.0.1'
     os.environ['SPARK_SUBMIT_OPTS'] = '-Djava.security.manager=allow'
     os.environ['_JAVA_OPTIONS'] = '-Djava.security.manager=allow'
     

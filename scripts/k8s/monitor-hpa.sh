@@ -64,14 +64,14 @@ while true; do
             show_pod_status "app=dask-benchmark,component=worker"
             ;;
         pyspark)
-            show_hpa_status "pyspark-executor-hpa"
-            show_pod_status "app=pyspark-benchmark,component=executor"
+            show_hpa_status "pyspark-worker-hpa"
+            show_pod_status "app=pyspark-benchmark,component=worker"
             ;;
         all)
             show_hpa_status "dask-worker-hpa"
             show_pod_status "app=dask-benchmark,component=worker"
-            show_hpa_status "pyspark-executor-hpa"
-            show_pod_status "app=pyspark-benchmark,component=executor"
+            show_hpa_status "pyspark-worker-hpa"
+            show_pod_status "app=pyspark-benchmark,component=worker"
             ;;
         *)
             echo -e "${RED}[ERROR]${NC} Invalid target: $TARGET. Use 'dask', 'pyspark', or 'all'"

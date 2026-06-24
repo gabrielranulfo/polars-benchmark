@@ -44,6 +44,14 @@ spec:
           value: "4g"
         - name: SPARK_EXECUTOR_CORES
           value: "2"
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: SPARK_LOCAL_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
         - name: RUN_LOG_TIMINGS
           value: "1"
         volumeMounts:
@@ -154,26 +162,26 @@ spec:
           periodSeconds: 10
 
 ---
-# PySpark Executors Deployment
+# PySpark Workers Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pyspark-executor
+  name: pyspark-worker
   namespace: tpch-benchmark
   labels:
     app: pyspark-benchmark
-    component: executor
+    component: worker
 spec:
   replicas: 2
   selector:
     matchLabels:
       app: pyspark-benchmark
-      component: executor
+      component: worker
   template:
     metadata:
       labels:
         app: pyspark-benchmark
-        component: executor
+        component: worker
     spec:
       serviceAccountName: pyspark-sa
       volumes:
@@ -184,26 +192,27 @@ spec:
         persistentVolumeClaim:
           claimName: tpch-data-pvc
       containers:
-      - name: pyspark-executor
+      - name: pyspark-worker
         image: gabrielranulfo/tpch-benchmark:pyspark-latest
         imagePullPolicy: Always
         command:
         - "/usr/local/lib/python3.11/dist-packages/pyspark/bin/spark-class"
-        - "org.apache.spark.deploy.executor.CoarseGrainedExecutorBackend"
-        - "--driver-url"
-        - "spark://pyspark-driver:7077"
-        - "--executor-id"
-        - "{{POD_NAME}}"
+        - "org.apache.spark.deploy.worker.Worker"
+        - "--host"
+        - "$(POD_IP)"
         - "--cores"
         - "2"
-        - "--app-id"
-        - "tpch-benchmark"
+        - "--memory"
+        - "4g"
+        - "spark://pyspark-master:7077"
         env:
-        - name: POD_NAME
+        - name: POD_IP
           valueFrom:
             fieldRef:
-              fieldPath: metadata.name
-        - name: SPARK_EXECUTOR_MEMORY
+              fieldPath: status.podIP
+        - name: SPARK_WORKER_CORES
+          value: "2"
+        - name: SPARK_WORKER_MEMORY
           value: "4g"
         volumeMounts:
         - name: output-volume

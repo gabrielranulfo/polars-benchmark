@@ -49,10 +49,10 @@ delete_resources() {
             ;;
         pyspark)
             log_info "Deleting PySpark HPA..."
-            kubectl delete hpa -n tpch-benchmark pyspark-executor-hpa --ignore-not-found=true
+            kubectl delete hpa -n tpch-benchmark pyspark-worker-hpa --ignore-not-found=true
             
             log_info "Deleting PySpark deployments..."
-            kubectl delete deployment -n tpch-benchmark pyspark-driver pyspark-master pyspark-executor --ignore-not-found=true
+            kubectl delete deployment -n tpch-benchmark pyspark-driver pyspark-master pyspark-worker --ignore-not-found=true
             
             log_info "Deleting PySpark services..."
             kubectl delete service -n tpch-benchmark pyspark-master --ignore-not-found=true

@@ -103,7 +103,7 @@ Para executar o benchmark com outro scale factor no cluster:
    ```bash
    kubectl set env deployment/pyspark-driver SCALE_FACTOR=10
    kubectl set env deployment/pyspark-master SCALE_FACTOR=10
-   kubectl set env deployment/pyspark-executor SCALE_FACTOR=10
+   kubectl set env deployment/pyspark-worker SCALE_FACTOR=10
    kubectl delete pod -n tpch-benchmark --all
    ```
 
@@ -222,8 +222,8 @@ Isso cria no namespace `tpch-benchmark`:
 | Recurso | Dask | PySpark |
 |---------|------|---------|
 | **Scheduler/Master** | `dask-scheduler` | `pyspark-master` |
-| **Workers/Executors** | `dask-worker` (começa com 2) | `pyspark-executor` (começa com 2) |
-| **HPA** | `dask-worker-hpa` | `pyspark-executor-hpa` |
+| **Workers/Executors** | `dask-worker` (começa com 2) | `pyspark-worker` (começa com 2) |
+| **HPA** | `dask-worker-hpa` | `pyspark-worker-hpa` |
 | **Persistência (saídas)** | PVC `tpch-output-pvc` | PVC `tpch-output-pvc` |
 | **Persistência (dados TPC-H)** | PVC `tpch-data-pvc` | PVC `tpch-data-pvc` |
 
