@@ -32,12 +32,7 @@ spec:
       - name: pyspark-driver
         image: gabrielranulfo/tpch-benchmark:pyspark-latest
         imagePullPolicy: Always
-        command:
-        - "sh"
-        - "-c"
-        - |
-          python3 -c "c=open('/root/polars-benchmark/queries/pyspark/utils.py').read();c=c.replace('\"spark.shuffle.service.enabled\", \"true\"','\"spark.shuffle.service.enabled\", \"false\"');c=c.replace(\"os.environ['SPARK_LOCAL_IP'] = '127.0.0.1'\",\"if 'SPARK_LOCAL_IP' not in os.environ: os.environ['SPARK_LOCAL_IP'] = '127.0.0.1'\");open('/root/polars-benchmark/queries/pyspark/utils.py','w').write(c)"
-          exec python -m queries.pyspark
+        command: ["python", "-m", "queries.pyspark"]
         env:
         - name: RUN_PYSPARK_MASTER
           value: "spark://pyspark-master:7077"
