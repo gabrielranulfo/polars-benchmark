@@ -14,6 +14,7 @@ cramjam==2.8.3
 cycler==0.12.1
 dask==2024.4.1
 dask-expr==1.0.11
+distributed==2024.4.1
 distlib==0.3.8
 duckdb==0.10.2
 fastparquet==2024.2.0
