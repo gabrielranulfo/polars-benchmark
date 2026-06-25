@@ -79,6 +79,64 @@ spec:
     targetPort: 8787
 
 ---
+# Dask Driver Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dask-driver
+  namespace: tpch-benchmark
+  labels:
+    app: dask-benchmark
+    component: driver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dask-benchmark
+      component: driver
+  template:
+    metadata:
+      labels:
+        app: dask-benchmark
+        component: driver
+    spec:
+      serviceAccountName: dask-sa
+      volumes:
+      - name: output-volume
+        persistentVolumeClaim:
+          claimName: tpch-output-pvc
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: tpch-data-pvc
+      containers:
+      - name: dask-driver
+        image: gabrielranulfo/tpch-benchmark:dask-latest
+        imagePullPolicy: Always
+        command: ["python", "-m", "queries.dask"]
+        env:
+        - name: RUN_DASK_SCHEDULER
+          value: "tcp://dask-scheduler:8786"
+        - name: RUN_LOG_TIMINGS
+          value: "1"
+        volumeMounts:
+        - name: output-volume
+          mountPath: /root/polars-benchmark/output
+        - name: data-volume
+          mountPath: /root/polars-benchmark/data/tables
+        resources:
+          requests:
+            cpu: "1"
+            memory: "4Gi"
+          limits:
+            cpu: "2"
+            memory: "8Gi"
+        livenessProbe:
+          exec:
+            command: ["python", "--version"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+
+---
 # Dask Workers Deployment
 apiVersion: apps/v1
 kind: Deployment
