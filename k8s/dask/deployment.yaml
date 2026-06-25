@@ -29,7 +29,7 @@ spec:
       - name: dask-scheduler
         image: gabrielranulfo/tpch-benchmark:dask-latest
         imagePullPolicy: Always
-        command: ["dask-scheduler"]
+        command: ["python", "-m", "distributed.cli.dask_scheduler"]
         ports:
         - name: tcp
           containerPort: 8786
@@ -170,7 +170,7 @@ spec:
       - name: dask-worker
         image: gabrielranulfo/tpch-benchmark:dask-latest
         imagePullPolicy: Always
-        command: ["dask-worker", "dask-scheduler:8786"]
+        command: ["python", "-m", "distributed.cli.dask_worker", "dask-scheduler:8786"]
         env:
         - name: RUN_DASK_SCHEDULER
           value: "tcp://dask-scheduler:8786"
@@ -194,6 +194,6 @@ spec:
             memory: "8Gi"
         livenessProbe:
           exec:
-            command: ["dask-worker", "--version"]
+            command: ["python", "--version"]
           initialDelaySeconds: 30
           periodSeconds: 10
