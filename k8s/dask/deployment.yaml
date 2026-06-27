@@ -28,7 +28,7 @@ spec:
       containers:
       - name: dask-scheduler
         image: gabrielranulfo/tpch-benchmark:dask-latest
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         command: ["python", "-m", "distributed.cli.dask_scheduler"]
         ports:
         - name: tcp
@@ -111,7 +111,7 @@ spec:
       containers:
       - name: dask-driver
         image: gabrielranulfo/tpch-benchmark:dask-latest
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         command: ["python", "-m", "queries.dask"]
         env:
         - name: RUN_DASK_SCHEDULER
@@ -171,7 +171,7 @@ spec:
       containers:
       - name: dask-worker
         image: gabrielranulfo/tpch-benchmark:dask-latest
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         command: ["python", "-m", "distributed.cli.dask_worker", "dask-scheduler:8786"]
         env:
         - name: RUN_DASK_SCHEDULER
