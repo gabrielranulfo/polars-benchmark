@@ -118,6 +118,8 @@ spec:
           value: "tcp://dask-scheduler:8786"
         - name: RUN_LOG_TIMINGS
           value: "1"
+        - name: SCALE_FACTOR
+          value: "50"
         volumeMounts:
         - name: output-volume
           mountPath: /root/polars-benchmark/output
@@ -178,7 +180,7 @@ spec:
           value: "1"
         args:
         - "--nthreads=2"
-        - "--memory-limit=4Gi"
+        - "--memory-limit=5Gi"
         - "--dashboard"
         volumeMounts:
         - name: output-volume
@@ -191,7 +193,7 @@ spec:
             memory: "4Gi"
           limits:
             cpu: "4"
-            memory: "8Gi"
+            memory: "6Gi"
         livenessProbe:
           exec:
             command: ["python", "--version"]

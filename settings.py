@@ -87,7 +87,7 @@ class Kubernetes(BaseSettings):
     dask_scheduler_host: str = "dask-scheduler"
     dask_scheduler_port: int = 8786
     dask_worker_replicas_min: int = 2
-    dask_worker_replicas_max: int = 10
+    dask_worker_replicas_max: int = 6
     dask_worker_cpu_request: str = "2"
     dask_worker_memory_request: str = "4Gi"
     dask_worker_cpu_threshold: int = 70
@@ -97,10 +97,10 @@ class Kubernetes(BaseSettings):
     pyspark_master_host: str = "pyspark-master"
     pyspark_master_port: int = 7077
     pyspark_executor_replicas_min: int = 2
-    pyspark_executor_replicas_max: int = 10
+    pyspark_executor_replicas_max: int = 6
     pyspark_executor_cpu_request: str = "2"
     pyspark_executor_memory_request: str = "4Gi"
-    pyspark_executor_cpu_threshold: int = 75
+    pyspark_executor_cpu_threshold: int = 70
     pyspark_executor_memory_threshold: int = 80
     
     # HPA behavior

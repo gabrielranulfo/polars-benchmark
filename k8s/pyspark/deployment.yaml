@@ -54,6 +54,8 @@ spec:
               fieldPath: status.podIP
         - name: RUN_LOG_TIMINGS
           value: "1"
+        - name: SCALE_FACTOR
+          value: "50"
         volumeMounts:
         - name: output-volume
           mountPath: /root/polars-benchmark/output
@@ -225,7 +227,7 @@ spec:
             memory: "4Gi"
           limits:
             cpu: "4"
-            memory: "8Gi"
+            memory: "6Gi"
         livenessProbe:
           exec:
             command: ["python", "--version"]

@@ -15,7 +15,7 @@ spec:
     kind: Deployment
     name: pyspark-worker
   minReplicas: 2
-  maxReplicas: 10
+  maxReplicas: 6
   metrics:
   # CPU-based scaling: scale up when CPU usage > 75%
   - type: Resource
@@ -23,7 +23,7 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 75
+        averageUtilization: 70
   # Memory-based scaling: scale up when memory usage > 80%
   - type: Resource
     resource:

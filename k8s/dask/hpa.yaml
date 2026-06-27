@@ -15,7 +15,7 @@ spec:
     kind: Deployment
     name: dask-worker
   minReplicas: 2
-  maxReplicas: 10
+  maxReplicas: 6
   metrics:
   # CPU-based scaling: scale up when CPU usage > 70%
   - type: Resource
