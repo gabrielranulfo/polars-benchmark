@@ -179,8 +179,8 @@ spec:
         - name: RUN_LOG_TIMINGS
           value: "1"
         args:
-        - "--nthreads=2"
-        - "--memory-limit=5Gi"
+        - "--nthreads=1"
+        - "--memory-limit=7Gi"
         - "--dashboard"
         volumeMounts:
         - name: output-volume
@@ -193,7 +193,7 @@ spec:
             memory: "4Gi"
           limits:
             cpu: "4"
-            memory: "6Gi"
+            memory: "8Gi"
         livenessProbe:
           exec:
             command: ["python", "--version"]

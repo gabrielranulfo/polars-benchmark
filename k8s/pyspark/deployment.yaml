@@ -205,7 +205,7 @@ spec:
         - "--cores"
         - "2"
         - "--memory"
-        - "4g"
+        - "6g"
         - "spark://pyspark-master:7077"
         env:
         - name: POD_IP
@@ -215,7 +215,7 @@ spec:
         - name: SPARK_WORKER_CORES
           value: "2"
         - name: SPARK_WORKER_MEMORY
-          value: "4g"
+          value: "6g"
         volumeMounts:
         - name: output-volume
           mountPath: /root/polars-benchmark/output
@@ -227,7 +227,7 @@ spec:
             memory: "4Gi"
           limits:
             cpu: "4"
-            memory: "6Gi"
+            memory: "8Gi"
         livenessProbe:
           exec:
             command: ["python", "--version"]
