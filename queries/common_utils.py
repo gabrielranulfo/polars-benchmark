@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from linetimer import CodeTimer
 
-from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
+from prometheus_client import CollectorRegistry, Gauge, pushadd_to_gateway
 
 from settings import Settings
 
@@ -132,7 +132,7 @@ def _push_metrics(
             d = Gauge("tpch_query_duration_seconds", "", ["library", "query"], registry=registry)
             d.labels(library=library, query=str(query_number)).set(duration)
 
-        push_to_gateway(url, job="tpch", registry=registry)
+        pushadd_to_gateway(url, job="tpch", registry=registry)
     except Exception:
         pass
 
