@@ -113,6 +113,18 @@ def get_part_supp_ds() -> DataFrame:
     return _read_ds("partsupp")
 
 
+def get_executor_count() -> int:
+    master_url = settings.run.pyspark_master
+    if master_url and master_url != "local[*]":
+        try:
+            spark = get_or_create_spark()
+            sc = spark.sparkContext
+            return int(sc.getConf().get("spark.executor.instances", "0"))
+        except Exception:
+            return 0
+    return 0
+
+
 def run_query(query_number: int, df: DataFrame) -> None:
     def query():
         if settings.scale_factor == 1 and settings.run.check_results:

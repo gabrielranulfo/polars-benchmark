@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from .monitor_de_memoria import MemoryMonitor
-from .monitor_de_cpu import CpuMonitor  
-
 import re
 import sys
 import os
+import time
 from importlib.metadata import version
 from pathlib import Path
 from subprocess import run, Popen
 from typing import TYPE_CHECKING, Any
 
 from linetimer import CodeTimer
+
+from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 
 from settings import Settings
 
@@ -88,31 +88,67 @@ def execute_all(library_name: str) -> None:
 
     query_numbers = _get_query_numbers(library_name)
 
-    memoria_monitor = MemoryMonitor(interval_us=500_000, log_file="output/run/memory_monitor.csv")
-
-    cpu_monitor = CpuMonitor(interval_us=500_000, log_file="output/run/cpu_monitor.csv")
-
     with CodeTimer(name=f"Overall execution of ALL {library_name} queries", unit="s"):
 
         for query_number in query_numbers:
 
             process = Popen([sys.executable, "-m", f"queries.{library_name}.q{query_number}"])
+            start = time.time()
 
-            current_pid = process.pid
-            
-            memoria_monitor.set_pid(current_pid)
-            memoria_monitor.set_query_details(query_number=query_number, library_name=library_name)
-            
-            cpu_monitor.set_pid(current_pid)  
-            cpu_monitor.set_query_details(query_number=query_number, library_name=library_name) 
-
-            memoria_monitor.start_monitoring()
-            cpu_monitor.start_monitoring()  
+            worker_count = _get_worker_count(library_name)
+            _push_metrics(library=library_name, query_number=query_number, worker_count=worker_count)
 
             process.wait()
 
-            memoria_monitor.stop_monitoring()
-            cpu_monitor.stop_monitoring() 
+            duration = time.time() - start
+            worker_count = _get_worker_count(library_name)
+            _push_metrics(library=library_name, query_number=0, worker_count=worker_count, duration=duration)
+
+def _get_pushgateway_url() -> str | None:
+    host = os.getenv("PUSHGATEWAY_HOST", "pushgateway")
+    port = os.getenv("PUSHGATEWAY_PORT", "9091")
+    return f"{host}:{port}"
+
+
+def _push_metrics(
+    library: str,
+    query_number: int,
+    worker_count: int = 0,
+    duration: float | None = None,
+) -> None:
+    url = _get_pushgateway_url()
+    if not url:
+        return
+    try:
+        registry = CollectorRegistry()
+
+        g = Gauge("tpch_query_number", "", ["library"], registry=registry)
+        g.labels(library=library).set(query_number)
+
+        w = Gauge("tpch_worker_count", "", ["library"], registry=registry)
+        w.labels(library=library).set(worker_count)
+
+        if duration is not None:
+            d = Gauge("tpch_query_duration_seconds", "", ["library", "query"], registry=registry)
+            d.labels(library=library, query=str(query_number)).set(duration)
+
+        push_to_gateway(url, job="tpch", registry=registry)
+    except Exception:
+        pass
+
+
+def _get_worker_count(library_name: str) -> int:
+    try:
+        if library_name == "dask":
+            from queries.dask.utils import get_worker_count
+            return get_worker_count()
+        elif library_name == "pyspark":
+            from queries.pyspark.utils import get_executor_count
+            return get_executor_count()
+    except Exception:
+        pass
+    return 0
+
 
 def _get_query_numbers(library_name: str) -> list[int]:
     """Get the query numbers that are implemented for the given library."""

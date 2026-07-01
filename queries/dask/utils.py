@@ -92,5 +92,15 @@ def get_part_supp_ds() -> DataFrame:
     return read_ds("partsupp")
 
 
+def get_worker_count() -> int:
+    if scheduler and scheduler != "threads":
+        try:
+            info = client.scheduler_info()
+            return len(info.get("workers", {}))
+        except Exception:
+            return 0
+    return 0
+
+
 def run_query(query_number: int, query: Callable[..., Any]) -> None:
     run_query_generic(query, query_number, "dask", query_checker=check_query_result_pd)
