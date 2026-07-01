@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pushgateway
+  namespace: default
+  labels:
+    app: pushgateway
+    release: prom
+spec:
+  jobLabel: pushgateway
+  selector:
+    matchLabels:
+      app: pushgateway
+  namespaceSelector:
+    any: true
+  endpoints:
+  - port: http-metrics
+    interval: 15s
+    honorLabels: true

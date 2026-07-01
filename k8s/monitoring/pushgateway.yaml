@@ -8,9 +8,10 @@ metadata:
   labels:
     app: pushgateway
 spec:
-  ports:
-  - port: 9091
-    targetPort: 9091
+   ports:
+   - name: http-metrics
+     port: 9091
+     targetPort: 9091
   selector:
     app: pushgateway
 ---
@@ -36,6 +37,7 @@ spec:
       - name: pushgateway
         image: prom/pushgateway:v1.8.0
         imagePullPolicy: IfNotPresent
+        args: ["--persistence.file="]
         ports:
         - containerPort: 9091
         resources:
