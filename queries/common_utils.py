@@ -107,7 +107,7 @@ def execute_all(library_name: str) -> None:
 def _get_pushgateway_url() -> str | None:
     host = os.getenv("PUSHGATEWAY_HOST", "pushgateway")
     port = os.getenv("PUSHGATEWAY_PORT", "9091")
-    return f"{host}:{port}"
+    return f"http://{host}:{port}"
 
 
 def _push_metrics(
@@ -133,8 +133,8 @@ def _push_metrics(
             d.labels(library=library, query=str(query_number)).set(duration)
 
         pushadd_to_gateway(url, job="tpch", registry=registry)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[_push_metrics] Pushgateway push error: {e}", file=sys.stderr)
 
 
 def _get_worker_count(library_name: str) -> int:
