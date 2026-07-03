@@ -105,7 +105,7 @@ def execute_all(library_name: str) -> None:
             _push_metrics(library=library_name, query_number=0, worker_count=worker_count, duration=duration)
 
 def _get_pushgateway_url() -> str | None:
-    host = os.getenv("PUSHGATEWAY_HOST", "pushgateway")
+    host = os.getenv("PUSHGATEWAY_HOST", "pushgateway.tpch-benchmark.svc.cluster.local")
     port = os.getenv("PUSHGATEWAY_PORT", "9091")
     return f"http://{host}:{port}"
 
