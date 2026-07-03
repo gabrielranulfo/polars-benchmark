@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from linetimer import CodeTimer
 
-from prometheus_client import CollectorRegistry, Gauge, pushadd_to_gateway
+import requests
 
 from settings import Settings
 
@@ -119,22 +119,20 @@ def _push_metrics(
     url = _get_pushgateway_url()
     if not url:
         return
+
+    lines = [
+        f'tpch_query_number{{library="{library}"}} {query_number}',
+        f'tpch_worker_count{{library="{library}"}} {worker_count}',
+    ]
+    if duration is not None:
+        lines.append(
+            f'tpch_query_duration_seconds{{library="{library}",query="{query_number}"}} {duration}'
+        )
+
     try:
-        registry = CollectorRegistry()
-
-        g = Gauge("tpch_query_number", "", ["library"], registry=registry)
-        g.labels(library=library).set(query_number)
-
-        w = Gauge("tpch_worker_count", "", ["library"], registry=registry)
-        w.labels(library=library).set(worker_count)
-
-        if duration is not None:
-            d = Gauge("tpch_query_duration_seconds", "", ["library", "query"], registry=registry)
-            d.labels(library=library, query=str(query_number)).set(duration)
-
-        pushadd_to_gateway(url, job="tpch", registry=registry)
+        requests.post(f"{url}/metrics/job/tpch", data="\n".join(lines) + "\n", timeout=5)
     except Exception as e:
-        print(f"[_push_metrics] Pushgateway push error: {e}", file=sys.stderr)
+        print(f"[_push_metrics] ERRO: {e}", file=sys.stderr)
 
 
 def _get_worker_count(library_name: str) -> int:
