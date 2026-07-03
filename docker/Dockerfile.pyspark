@@ -5,14 +5,14 @@ ENV PYTHONUNBUFFERED=1
 ENV SCALE_FACTOR=1.0
 ENV SPARK_LOCAL_IP=127.0.0.1
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+RUN apt-get update -o Acquire::AllowInsecureRepositories=true 2>/dev/null; \
+    apt-get install -y --no-install-recommends --allow-unauthenticated \
         software-properties-common gnupg ca-certificates curl && \
-    curl -fsSL https://keyserver.ubuntu.com/pks/lookup?op=get\&search=0xBA6932366A755776 | \
+    curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xBA6932366A755776" | \
         gpg --dearmor -o /etc/apt/trusted.gpg.d/deadsnakes.gpg && \
     add-apt-repository ppa:deadsnakes/ppa -y && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get update -o Acquire::AllowInsecureRepositories=true 2>/dev/null; \
+    apt-get install -y --no-install-recommends --allow-unauthenticated \
         python3.11 python3.11-dev python3.11-venv python3-pip \
         openjdk-17-jdk build-essential git curl wget \
         libssl-dev libffi-dev libsqlite3-dev \
