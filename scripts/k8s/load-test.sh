@@ -123,9 +123,9 @@ spec:
       spark = SparkSession.builder \
           .appName("tpch-load-test") \
           .master("spark://pyspark-master:7077") \
-          .config("spark.executor.instances", "4") \
-          .config("spark.executor.cores", "2") \
-          .config("spark.executor.memory", "4g") \
+          .config("spark.executor.instances", "2") \
+          .config("spark.executor.cores", "1") \
+          .config("spark.executor.memory", "6g") \
           .getOrCreate()
 
       # Create a large synthetic dataframe

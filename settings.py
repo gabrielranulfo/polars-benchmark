@@ -49,7 +49,7 @@ class Run(BaseSettings):
     modin_memory: int = 60_000_000_000  # Tune as needed for optimal performance
 
     spark_driver_memory: str = os.getenv("SPARK_DRIVER_MEMORY", "4g")
-    spark_executor_memory: str = os.getenv("SPARK_EXECUTOR_MEMORY", "55g")
+    spark_executor_memory: str = os.getenv("SPARK_EXECUTOR_MEMORY", "6g")
     spark_log_level: str = "ERROR"
 
     # Library selection — comma-separated list of libraries to run

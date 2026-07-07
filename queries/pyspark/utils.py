@@ -49,7 +49,7 @@ def get_or_create_spark() -> SparkSession:
             spark_builder
             .config("spark.dynamicAllocation.enabled", "true")
             .config("spark.dynamicAllocation.minExecutors", "1")
-            .config("spark.dynamicAllocation.maxExecutors", "10")
+            .config("spark.dynamicAllocation.maxExecutors", "6")
             .config("spark.dynamicAllocation.initialExecutors", "2")
             .config("spark.dynamicAllocation.shuffleTracking.enabled", "true")
         )

@@ -41,9 +41,9 @@ spec:
         - name: SPARK_DRIVER_MEMORY
           value: "4g"
         - name: SPARK_EXECUTOR_MEMORY
-          value: "4g"
+          value: "6g"
         - name: SPARK_EXECUTOR_CORES
-          value: "2"
+          value: "1"
         - name: POD_IP
           valueFrom:
             fieldRef:
@@ -203,7 +203,7 @@ spec:
         - "--host"
         - "$(POD_IP)"
         - "--cores"
-        - "2"
+        - "1"
         - "--memory"
         - "6g"
         - "spark://pyspark-master:7077"
@@ -213,7 +213,7 @@ spec:
             fieldRef:
               fieldPath: status.podIP
         - name: SPARK_WORKER_CORES
-          value: "2"
+          value: "1"
         - name: SPARK_WORKER_MEMORY
           value: "6g"
         volumeMounts:
