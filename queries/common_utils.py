@@ -88,9 +88,15 @@ def execute_all(library_name: str) -> None:
 
     query_numbers = _get_query_numbers(library_name)
 
+    if settings.kubernetes.enabled:
+        _scale_workers(library_name, _get_min_replicas(library_name))
+
     with CodeTimer(name=f"Overall execution of ALL {library_name} queries", unit="s"):
 
         for query_number in query_numbers:
+
+            if settings.kubernetes.enabled:
+                _scale_workers(library_name, _get_max_replicas(library_name))
 
             process = Popen([sys.executable, "-m", f"queries.{library_name}.q{query_number}"])
             start = time.time()
@@ -103,6 +109,9 @@ def execute_all(library_name: str) -> None:
             duration = time.time() - start
             worker_count = _get_worker_count(library_name)
             _push_metrics(library=library_name, query_number=0, worker_count=worker_count, duration=duration)
+
+            if settings.kubernetes.enabled:
+                _scale_workers(library_name, _get_min_replicas(library_name))
 
 def _get_pushgateway_url() -> str:
     host = os.getenv("PUSHGATEWAY_SERVICE_HOST", "pushgateway")
@@ -133,6 +142,34 @@ def _push_metrics(
         requests.post(f"{url}/metrics/job/tpch", data="\n".join(lines) + "\n", timeout=5)
     except Exception as e:
         print(f"[_push_metrics] ERRO: {e}", file=sys.stderr)
+
+
+def _get_min_replicas(library_name: str) -> int:
+    if library_name == "dask":
+        return settings.kubernetes.dask_worker_replicas_min
+    return settings.kubernetes.pyspark_executor_replicas_min
+
+
+def _get_max_replicas(library_name: str) -> int:
+    if library_name == "dask":
+        return settings.kubernetes.dask_worker_replicas_max
+    return settings.kubernetes.pyspark_executor_replicas_max
+
+
+def _scale_workers(library_name: str, replicas: int) -> None:
+    try:
+        token = Path("/var/run/secrets/kubernetes.io/serviceaccount/token").read_text()
+        ca = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+        ns = Path("/var/run/secrets/kubernetes.io/serviceaccount/namespace").read_text().strip()
+        deploy = f"{library_name}-worker"
+        url = f"https://kubernetes.default.svc/apis/apps/v1/namespaces/{ns}/deployments/{deploy}/scale"
+        requests.patch(url,
+            json={"spec": {"replicas": replicas}},
+            headers={"Authorization": f"Bearer {token}",
+                     "Content-Type": "application/merge-patch+json"},
+            verify=ca, timeout=10)
+    except Exception as e:
+        print(f"[_scale_workers] ERRO: {e}", file=sys.stderr)
 
 
 def _get_worker_count(library_name: str) -> int:
