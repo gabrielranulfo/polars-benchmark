@@ -1,6 +1,7 @@
 ---
 # HorizontalPodAutoscaler for Dask Workers
-# Scales based on CPU and memory usage
+# DESATIVADO: o código em execute_all() controla replicas manualmente
+# (elasticidade-workers-dinamicos). HPA conflitava com _scale_workers().
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -14,17 +15,15 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: dask-worker
-  minReplicas: 2
-  maxReplicas: 6
+  minReplicas: 0
+  maxReplicas: 0
   metrics:
-  # CPU-based scaling: scale up when CPU usage > 70%
   - type: Resource
     resource:
       name: cpu
       target:
         type: Utilization
         averageUtilization: 70
-  # Memory-based scaling: scale up when memory usage > 80%
   - type: Resource
     resource:
       name: memory
@@ -48,7 +47,3 @@ spec:
       - type: Percent
         value: 100
         periodSeconds: 15
-      - type: Pods
-        value: 2
-        periodSeconds: 15
-      selectPolicy: Max

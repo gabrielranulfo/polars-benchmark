@@ -29,7 +29,7 @@ RUN cd /root && \
     rm -rf polars-benchmark && \
     git clone https://github.com/gabrielranulfo/polars-benchmark.git && \
     cd polars-benchmark && \
-    git checkout mestrado-elasticidade-prometheus
+    git checkout elasticidade-workers-dinamicos
 
 WORKDIR /root/polars-benchmark
 

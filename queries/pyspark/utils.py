@@ -118,8 +118,8 @@ def get_executor_count() -> int:
     if master_url and master_url != "local[*]":
         try:
             spark = get_or_create_spark()
-            sc = spark.sparkContext
-            return int(sc.getConf().get("spark.executor.instances", "0"))
+            mem_status = spark.sparkContext.getExecutorMemoryStatus()
+            return max(0, len(mem_status) - 1)
         except Exception:
             return 0
     return 0
