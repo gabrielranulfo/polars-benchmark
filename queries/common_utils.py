@@ -104,6 +104,9 @@ def execute_all(library_name: str) -> None:
             worker_count = _get_worker_count(library_name)
             _push_metrics(library=library_name, query_number=0, worker_count=worker_count, duration=duration)
 
+    print(f"[execute_all] Todas as queries concluídas. Aguardando 350s para scale-down do HPA...")
+    time.sleep(350)
+
 def _get_pushgateway_url() -> str:
     host = os.getenv("PUSHGATEWAY_SERVICE_HOST", "pushgateway")
     port = os.getenv("PUSHGATEWAY_SERVICE_PORT", "9091")
